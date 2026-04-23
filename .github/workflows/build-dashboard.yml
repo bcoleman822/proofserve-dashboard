@@ -1,0 +1,69 @@
+name: Build Dashboard
+
+on:
+  # Runs daily at 6:00 AM EST (11:00 UTC)
+  schedule:
+    - cron: '0 11 * * *'
+  
+  # Allows you to manually trigger from the Actions tab
+  workflow_dispatch:
+
+# Required for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one deployment at a time
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      # 1. Check out the repo code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # 4. Write Google credentials to a temp file
+      - name: Write credentials
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS }}' > /tmp/google-creds.json
+
+      # 5. Run the build script
+      - name: Build dashboard
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/google-creds.json
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: python build.py
+
+      # 6. Clean up credentials
+      - name: Clean up credentials
+        run: rm -f /tmp/google-creds.json
+
+      # 7. Upload the built site as an artifact
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './output'
+
+      # 8. Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
