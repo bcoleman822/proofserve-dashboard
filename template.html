@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProofServe Unified Operations Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,700;0,900;1,300&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --navy:    #1B2A4A;
+  --navy-mid:#243559;
+  --navy-lt: #E8EDF5;
+  --gold:    #C9900C;
+  --gold-lt: #FFF3CD;
+  --gold-pale:#FFFAED;
+  --teal:    #0D9488;
+  --teal-lt: #CCFBF1;
+  --purple:  #7C3AED;
+  --purp-lt: #EDE9FE;
+  --coral:   #E11D48;
+  --coral-lt:#FFE4E6;
+  --green:   #16A34A;
+  --green-lt:#DCFCE7;
+  --orange:  #EA580C;
+  --orng-lt: #FFF0E6;
+  --indigo:  #4338CA;
+  --indg-lt: #E0E7FF;
+  --white:   #FFFFFF;
+  --off:     #F8FAFC;
+  --slate:   #64748B;
+  --slate-lt:#F1F5F9;
+  --dark:    #0F172A;
+  --amber:   #D97706;
+  --red-soft:#FEE2E2;
+  --ylw-soft:#FEF9C3;
+  --grn-soft:#DCFCE7;
+  --bg:       #F0F4FA;
+  --surface:  #FFFFFF;
+  --border:   #DDE3EF;
+  --text:     #0F172A;
+  --text-2:   #475569;
+  --shadow:   0 1px 3px rgba(27,42,74,.08), 0 4px 16px rgba(27,42,74,.06);
+  --shadow-lg:0 4px 24px rgba(27,42,74,.14);
+}
+[data-theme="dark"] {
+  --bg:      #0D1525;
+  --surface: #162035;
+  --border:  #253050;
+  --text:    #E8EDF5;
+  --text-2:  #8EA3C3;
+  --shadow:  0 1px 3px rgba(0,0,0,.3), 0 4px 16px rgba(0,0,0,.2);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.4);
+  --off:     #1A2845;
+  --slate-lt:#1E2D4A;
+  --navy-lt: #1E2D4A;
+  --gold-lt: #2A2210;
+  --gold-pale:#221D0A;
+  --grn-soft:#0D2015;
+  --ylw-soft:#221F08;
+  --red-soft:#2A0D12;
+  --teal-lt: #0A2420;
+  --purp-lt: #1A1030;
+  --coral-lt:#2A0D14;
+  --orng-lt: #231208;
+  --indg-lt: #111830;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; transition: background .3s, color .3s; }
+
+/* HEADER */
+.header { background: var(--navy); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--gold); }
+.header-brand { display: flex; align-items: baseline; gap: 14px; }
+.header-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -.3px; }
+.header-sub { font-size: 12px; color: #8EA3C3; font-weight: 400; letter-spacing: .4px; }
+.header-controls { display: flex; align-items: center; gap: 12px; }
+.search-wrap { position: relative; }
+.search-wrap input { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 7px 12px 7px 34px; color: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; width: 220px; transition: all .2s; }
+.search-wrap input::placeholder { color: #8EA3C3; }
+.search-wrap input:focus { outline: none; border-color: var(--gold); background: rgba(255,255,255,.12); width: 280px; }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #8EA3C3; font-size: 14px; }
+.dark-toggle { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 7px 12px; color: #fff; cursor: pointer; font-size: 13px; font-family: 'DM Sans', sans-serif; transition: all .2s; }
+.dark-toggle:hover { background: rgba(255,255,255,.15); }
+
+/* TABS */
+.tabs-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; position: sticky; top: 64px; z-index: 90; }
+.tabs-bar::-webkit-scrollbar { display: none; }
+.tab-btn { padding: 14px 18px; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; white-space: nowrap; transition: all .2s; font-family: 'DM Sans', sans-serif; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+[data-theme="dark"] .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* MAIN */
+.main { padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SECTION HEADER */
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.section-title { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700; color: var(--navy); letter-spacing: -.5px; }
+[data-theme="dark"] .section-title { color: #E8EDF5; }
+.section-sub { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+/* STAT CARDS */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.stat-card { background: var(--surface); border-radius: 12px; padding: 18px 20px; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent, var(--navy)); }
+.stat-label { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; }
+.stat-value { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; color: var(--text); line-height: 1; }
+.stat-sub { font-size: 11px; color: var(--text-2); margin-top: 5px; }
+
+/* TABLE */
+.table-wrap { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 28px; }
+.table-toolbar { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.table-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.table-count { font-size: 12px; color: var(--text-2); font-weight: 400; }
+.tbl-search { background: var(--off); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); width: 180px; }
+.tbl-search:focus { outline: none; border-color: var(--navy); }
+.scroll-x { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: var(--navy); color: #fff; padding: 10px 12px; text-align: center; font-weight: 600; font-size: 11.5px; letter-spacing: .3px; cursor: pointer; white-space: nowrap; user-select: none; }
+thead th:first-child { text-align: left; }
+thead th:hover { background: var(--navy-mid); }
+thead th .sort-icon { margin-left: 4px; opacity: .5; font-size: 10px; }
+thead th.sort-asc .sort-icon::after { content: ' ↑'; opacity: 1; }
+thead th.sort-desc .sort-icon::after { content: ' ↓'; opacity: 1; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; cursor: pointer; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--off) !important; }
+tbody td { padding: 9px 12px; text-align: center; vertical-align: middle; }
+tbody td:first-child { text-align: left; }
+
+/* SCORE CHIPS */
+.score-chip { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; height: 26px; border-radius: 6px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; padding: 0 6px; }
+.score-chip.high { background: var(--grn-soft); color: var(--green); }
+.score-chip.mid  { background: var(--ylw-soft); color: #92400E; }
+.score-chip.low  { background: var(--red-soft); color: var(--coral); }
+.score-chip.na   { background: var(--slate-lt); color: var(--slate); font-size: 11px; }
+
+/* RANK BADGES */
+.rank-badge { display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border-radius: 5px; padding: 2px 6px; margin-left: 6px; white-space: nowrap; letter-spacing: .2px; vertical-align: middle; }
+.rank-1  { background:#DCFCE7; color:#14532D; }
+.rank-2  { background:#D1FAE5; color:#166534; }
+.rank-3  { background:#E8F5E9; color:#1B5E20; }
+.rank-top { background:#F0FDF4; color:#15803D; }
+.rank-mid { background:#FEF9C3; color:#854D0E; }
+.rank-bot { background:#FEF2F2; color:#991B1B; }
+.rank-last { background:#FEE2E2; color:#7F1D1D; }
+.rank-cell { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 700; color: var(--text-2); min-width: 28px; text-align: center; }
+
+/* EXPAND ROWS */
+.expand-row { display: none; }
+.expand-row.open { display: table-row; }
+.expand-cell { padding: 0 !important; background: var(--off) !important; border-bottom: 2px solid var(--border) !important; }
+.expand-inner { padding: 16px 20px 20px; animation: fadeUp .2s ease; }
+.fail-card-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 10px; margin-top: 10px; }
+.fail-card { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); border-left: 3px solid var(--coral); padding: 12px 14px; }
+.fail-card-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 5px; }
+.fail-cat-tag { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+.fc-ops { background: var(--purp-lt); color: var(--purple); }
+.fc-cf { background: var(--orng-lt); color: var(--orange); }
+.fc-ose { background: var(--coral-lt); color: var(--coral); }
+.fail-date { font-size: 11px; color: var(--text-2); }
+.fail-firm { font-size: 11px; font-weight: 600; color: var(--gold); }
+.fail-notes { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-top: 3px; }
+.fail-reason { font-size: 11px; color: var(--slate); margin-top: 2px; font-style: italic; }
+.fail-link { font-size: 11px; color: var(--teal); text-decoration: none; margin-top: 4px; display: inline-block; }
+.fail-link:hover { text-decoration: underline; }
+.no-fails-msg { font-size: 13px; color: var(--green); display: flex; align-items: center; gap: 6px; padding: 8px 0; }
+
+/* BAR CHART */
+.bar-section { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); padding: 20px 24px; margin-bottom: 28px; }
+.bar-section-title { font-weight: 700; font-size: 15px; margin-bottom: 16px; }
+.bar-rows { display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: 180px 1fr 100px; align-items: center; gap: 12px; }
+.bar-name { font-size: 12px; font-weight: 500; text-align: right; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { background: var(--off); border-radius: 6px; height: 20px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 6px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.bar-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; }
+
+/* INSIGHTS */
+.insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+@media (max-width: 900px) { .insights-grid { grid-template-columns: 1fr; } }
+.insight-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+.insight-card-hdr { padding: 14px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+.ic-icon { font-size: 18px; }
+.ic-title { font-weight: 700; font-size: 14px; }
+.ic-sub { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+.insight-body { padding: 16px 18px; }
+.insight-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.insight-item:last-child { border-bottom: none; }
+.insight-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.insight-text { font-size: 13px; line-height: 1.6; color: var(--text); }
+.insight-text .flag { color: var(--coral); font-weight: 700; }
+.insight-text .good { color: var(--green); font-weight: 700; }
+.action-list { display: flex; flex-direction: column; gap: 12px; }
+.action-item { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 14px 16px; display: flex; gap: 14px; }
+.action-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #fff; flex-shrink: 0; }
+.action-content .action-title { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+.action-content .action-desc { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+
+/* TEAM CARDS */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-bottom: 28px; }
+.team-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; transition: box-shadow .2s, transform .2s; }
+.team-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.team-card-hdr { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.team-card-name { font-weight: 700; font-size: 15px; }
+.team-card-body { padding: 14px 18px; }
+.team-metric { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.team-metric:last-child { border-bottom: none; }
+.tm-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+.tm-val { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; }
+
+/* PERSONAL VIEW */
+.pv-wrap { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-lg); overflow: hidden; max-width: 960px; margin: 0 auto; }
+.pv-header { background: var(--navy); padding: 24px 28px 20px; border-bottom: 3px solid var(--gold); }
+.pv-header-role { font-size: 11px; font-weight: 600; color: #8EA3C3; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+.pv-header-name { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -.5px; margin-bottom: 6px; }
+.pv-header-meta { font-size: 12px; color: #8EA3C3; }
+.pv-score-banner { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+.pv-score-card { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 10px; padding: 10px 16px; min-width: 120px; }
+.pv-score-label { font-size: 10px; font-weight: 600; color: #8EA3C3; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+.pv-score-value { font-family: 'DM Mono', monospace; font-size: 26px; font-weight: 500; color: #fff; line-height: 1; }
+.pv-score-value.high { color: #34D399; }
+.pv-score-value.mid  { color: #FCD34D; }
+.pv-score-value.low  { color: #F87171; }
+.pv-score-sub { font-size: 11px; color: #8EA3C3; margin-top: 3px; }
+.pv-body { padding: 24px 28px; }
+.pv-section-title { font-size: 12px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 12px; margin-top: 22px; }
+.pv-section-title:first-child { margin-top: 0; }
+.pv-selector-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+.pv-selector-wrap select { flex: 1; min-width: 220px; padding: 9px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+.pv-selector-wrap select:focus { outline: none; border-color: var(--navy); }
+.pv-role-filter { display: flex; gap: 6px; flex-wrap: wrap; }
+.pv-role-pill { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; transition: all .15s; background: var(--surface); color: var(--text-2); }
+.pv-role-pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.pv-note-area { width: 100%; min-height: 90px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--text); background: var(--off); resize: vertical; line-height: 1.6; }
+.pv-note-area:focus { outline: none; border-color: var(--navy); }
+.pv-note-hint { font-size: 11px; color: var(--text-2); margin-top: 5px; }
+.pv-empty { text-align: center; padding: 60px 20px; color: var(--text-2); font-size: 14px; }
+.pv-print-btn { background: transparent; border: 1px solid var(--border); border-radius: 7px; padding: 7px 14px; font-size: 12px; font-family: 'DM Sans', sans-serif; color: var(--text-2); cursor: pointer; transition: all .15s; }
+.pv-print-btn:hover { background: var(--off); }
+.watch-flag { display: inline-flex; align-items: center; gap: 5px; background: var(--red-soft); color: var(--coral); font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 8px; margin-top: 8px; }
+.clean-flag { display: inline-flex; align-items: center; gap: 5px; background: var(--grn-soft); color: var(--green); font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 8px; margin-top: 8px; }
+
+/* CLIENT VIEW */
+.client-filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.client-select { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 13px; min-width: 260px; cursor: pointer; }
+.client-select:focus { outline: none; border-color: var(--navy); }
+.client-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+.client-card-hdr { background: var(--navy); color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+.client-card-name { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; }
+.client-card-badges { display: flex; gap: 8px; align-items: center; }
+.client-fail-badge { background: var(--coral); color: #fff; font-size: 11px; font-weight: 700; border-radius: 5px; padding: 3px 8px; }
+.client-body { padding: 16px 20px; }
+.client-fails-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.client-fails-table th { background: var(--navy-lt); color: var(--navy); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .4px; }
+[data-theme="dark"] .client-fails-table th { background: #1E2D4A; color: #8EA3C3; }
+.client-fails-table td { padding: 9px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+.client-insight { background: var(--gold-pale); border: 1px solid var(--gold-lt); border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 12px; line-height: 1.6; color: var(--text); }
+[data-theme="dark"] .client-insight { background: #1E1800; border-color: #3A2E0A; }
+.client-insight strong { color: var(--gold); }
+
+/* LEGEND */
+.legend { display: flex; flex-wrap: wrap; gap: 16px; padding: 12px 16px; background: var(--off); border-radius: 10px; margin-bottom: 20px; font-size: 12px; color: var(--text-2); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+/* SEARCH BANNER */
+.search-results-banner { display: none; background: var(--gold-lt); border-bottom: 2px solid var(--gold); padding: 8px 32px; font-size: 13px; color: var(--dark); align-items: center; gap: 12px; }
+.search-results-banner.visible { display: flex; }
+.clear-search { cursor: pointer; color: var(--coral); font-weight: 600; text-decoration: underline; }
+
+/* QUALITY TABLE */
+.quality-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+.quality-card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+.quality-card-hdr { background: var(--navy); color: #fff; padding: 14px 18px; font-weight: 700; font-size: 14px; }
+table.quality-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.quality-table th { background: var(--navy-lt); color: var(--navy); padding: 8px 14px; text-align: right; font-size: 11px; font-weight: 700; letter-spacing: .4px; }
+[data-theme="dark"] .quality-table th { background: #1E2D4A; color: #8EA3C3; }
+.quality-table th:first-child { text-align: left; }
+.quality-table td { padding: 8px 14px; border-top: 1px solid var(--border); text-align: right; }
+.quality-table td:first-child { text-align: left; font-weight: 500; }
+.quality-table tr.total-row td { background: var(--gold-pale); font-weight: 700; color: var(--navy); }
+[data-theme="dark"] .quality-table tr.total-row td { background: var(--navy-lt); color: var(--text); }
+.wq-badge { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; }
+.wq-badge.good { color: var(--green); }
+.wq-badge.warn { color: var(--amber); }
+.wq-badge.flag { color: var(--coral); }
+
+@media (max-width: 768px) { .header { padding: 0 16px; } .main { padding: 16px; } .tabs-bar { padding: 0 16px; } .bar-row { grid-template-columns: 100px 1fr 60px; } }
+
+/* MONTH SELECTOR */
+.mbar{display:flex;gap:3px}
+.mbtn{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;border:1px solid rgba(142,163,195,.3);color:#8EA3C3;background:transparent;cursor:pointer;transition:all .15s}
+.mbtn:hover{background:rgba(255,255,255,.05)}.mbtn.act{background:var(--gold);color:var(--navy);border-color:var(--gold)}.mbtn.ytd{background:var(--navy-mid);color:var(--gold);border-color:var(--gold)}
+/* EXPAND PILL NAV */
+.pill-nav{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px}
+.pill-btn{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif;border:1px solid var(--border);color:var(--text-2);background:transparent;cursor:pointer;transition:all .15s}
+.pill-btn:hover{border-color:var(--navy)}.pill-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+[data-theme="dark"] .pill-btn.active{background:var(--gold);color:var(--navy)}
+.pill-panel{display:none}.pill-panel.active{display:block}
+/* TASK GRID */
+.task-grid{display:grid;gap:6px;margin-bottom:10px}
+.task-card{background:var(--off);border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)}
+.task-name{font-size:9px;font-weight:600;color:var(--text-2)}.task-score{font-size:16px;font-weight:700;font-family:'DM Mono',monospace;margin:1px 0}
+.task-rank{font-size:8px;color:var(--slate)}.task-meta{font-size:9px;color:var(--slate);margin-top:2px}.task-wt{font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(201,144,12,.12);color:var(--gold);display:inline-block;margin-top:3px}
+/* EXPAND QUALITY STRIP */
+.qual-strip{display:flex;gap:16px;flex-wrap:wrap;padding:10px 12px;background:var(--off);border-radius:8px;margin-bottom:8px;font-size:12px}
+.qs-item .qs-label{font-size:9px;color:var(--text-2);font-weight:600}.qs-item .qs-val{font-weight:700;font-family:'DM Mono',monospace}
+.zero-badge{display:inline-block;font-size:9px;font-weight:700;padding:3px 10px;border-radius:8px;background:var(--grn-soft);color:var(--green);margin-top:6px}
+/* TOT GRID */
+.tot-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;margin-bottom:6px}
+.tot-card{background:var(--off);border-radius:8px;padding:6px;text-align:center;border:1px solid var(--border)}
+.tot-label{font-size:9px;font-weight:600;color:var(--text-2);text-transform:uppercase}.tot-val{font-size:16px;font-weight:700;font-family:'DM Mono',monospace}
+/* RAW MATH */
+.raw-math{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:10px;font-family:'DM Mono',monospace;font-size:10px;line-height:1.6;color:var(--text-2)}
+.raw-math strong{color:var(--text)}
+/* OPS BAR 2-COL */
+.bar-2col{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+/* BADGES */
+.rep-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:6px;display:inline-block;margin-left:4px}
+.badge-elite{background:var(--grn-soft);color:var(--green)}.badge-clean{background:var(--purp-lt);color:var(--purple)}.badge-vol{background:rgba(217,119,6,.1);color:var(--amber)}
+.badge-ironclad{background:#E0E7FF;color:var(--indigo)}.badge-glass{background:#FFF0E6;color:var(--orange)}.badge-survivor{background:var(--teal-lt);color:var(--teal)}.badge-client{background:var(--grn-soft);color:#166534}
+.badge-quick{background:#FEF9C3;color:#854D0E}.badge-deep{background:var(--teal-lt);color:var(--teal)}.badge-multi{background:var(--purp-lt);color:var(--purple)}.badge-marathon{background:rgba(217,119,6,.1);color:var(--amber)}
+.badge-rising{background:var(--grn-soft);color:var(--green)}.badge-streak{background:var(--grn-soft);color:#14532D}.badge-bounce{background:#E0E7FF;color:var(--indigo)}.badge-fading{background:var(--red-soft);color:var(--coral)}
+.badge-red{background:var(--red-soft);color:#991B1B}.badge-rework{background:var(--red-soft);color:var(--coral)}.badge-repeat{background:#FFF0E6;color:var(--orange)}
+[data-theme="dark"] .badge-ironclad{background:#111830;color:#818CF8}[data-theme="dark"] .badge-glass{background:#231208;color:#FB923C}[data-theme="dark"] .badge-survivor{background:#0A2420;color:#2DD4BF}[data-theme="dark"] .badge-client{background:#0D2015;color:#4ADE80}
+[data-theme="dark"] .badge-quick{background:#221F08;color:#FACC15}[data-theme="dark"] .badge-streak{background:#0D2015;color:#86EFAC}[data-theme="dark"] .badge-bounce{background:#111830;color:#A5B4FC}
+/* DISCLAIMER */
+.disc-box{background:rgba(201,144,12,.12);border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--gold);line-height:1.5}
+[data-theme="dark"] .disc-box{color:#FBBF24}
+</style>
+</head>
+<body>
+<header class="header">
+<div class="header-brand"><div>
+<div class="header-title">ProofServe Performance Metrics</div>
+<div class="header-sub">Unified Operations Dashboard</div>
+</div></div>
+<div class="header-controls">
+<div class="mbar">
+<button class="mbtn" onclick="setMonth('Jan',this)">Jan</button>
+<button class="mbtn" onclick="setMonth('Feb',this)">Feb</button>
+<button class="mbtn act" onclick="setMonth('Mar',this)">Mar</button>
+<button class="mbtn" onclick="setMonth('Apr',this)">Apr</button>
+<button class="mbtn ytd" onclick="setMonth('YTD',this)">YTD</button>
+</div>
+<button class="dark-toggle" id="darkToggle" onclick="toggleDark()">Dark</button>
+</div></header>
+<div class="tabs-bar" id="tbar"></div>
+<div class="main" id="mn"></div>
+<script>
+const D=__DASHBOARD_DATA_PLACEHOLDER__;
+let curMonth='Mar';
+const ML=['Jan','Feb','Mar','Apr'];
+const TABS=[{id:'summary',label:'📋 Summary'},{id:'guide',label:'📖 Guide'},{id:'service',label:'🛠 Service',role:'Service'},{id:'esclead',label:'🚀 ESC Lead',role:'ESC Lead'},{id:'qa',label:'🔍 QA',role:'QA'},{id:'dispatch',label:'📦 Dispatch',role:'Dispatch'},{id:'offapp',label:'📱 Off App',role:'Off App'},{id:'personal',label:'👤 Personal'},{id:'team',label:'📊 Team'},{id:'client',label:'⚖ Client View'},{id:'trends',label:'📈 Trends'},{id:'sources',label:'🗂 Sources'}];
+const WEIGHTS={Service:{'Chats':30,'1st Attempt Breach (1+)':25,'Job SLA Breach':20,'Bad Address':10,'Ad Hoc':8,'Attempt Limit':5,'Nudge Server (1+)':2},'ESC Lead':{'Chats':30,'1st Attempt Breach (1+)':25,'Job SLA Breach':20,'Bad Address':10,'Ad Hoc':8,'Attempt Limit':5,'Nudge Server (1+)':2},'Off App':{'Chats':30,'1st Attempt Breach (1+)':25,'Job SLA Breach':20,'Bad Address':10,'Ad Hoc':8,'Attempt Limit':5,'Nudge Server (1+)':2},QA:{'Affidavit Preparation':75,'Affidavit Changes':20,'Ad Hoc':5},Dispatch:{'Ad Hoc':20,'Assign Server':80}};
+const TS={'Chats':'Chats','1st Attempt Breach (1+)':'1st Att','Job SLA Breach':'Job SLA','Bad Address':'Bad Addr','Ad Hoc':'Ad Hoc','Attempt Limit':'Att Limit','Nudge Server (1+)':'Nudge Svr','Affidavit Preparation':'Aff Prep','Affidavit Changes':'Aff Chg','Assign Server':'Assign Svr','Assign server':'Assign Svr'};
+const RC={Service:'var(--teal)','ESC Lead':'var(--green)',QA:'var(--purple)',Dispatch:'var(--amber)','Off App':'var(--orange)'};
+function cc(v){return v>=90?'high':v>=75?'mid':'low'}
+function chip(v){if(v==null)return'<span class="score-chip na">N/A</span>';return`<span class="score-chip ${cc(v)}">${Math.round(v*10)/10}</span>`}
+function fbadge(n){return`<span class="score-chip ${n===0?'high':n<=2?'mid':'low'}">${n}</span>`}
+function allBadges(r,reps,role){
+  const b=[];
+  const n=reps.length;
+  const tasksSorted=reps.map(x=>x.tt).sort((a,b)=>a-b);
+  const topQ=tasksSorted[Math.floor(n*0.75)]||9999;
+  const median=tasksSorted[Math.floor(n/2)]||1;
+  
+  // ── QUALITY & CONSISTENCY ──
+  if(r.o&&r.o>=90)b.push({tag:'Elite',cls:'badge-elite',cat:'Quality',desc:'OPS 90+'});
+  if(r.mf===0&&r.tt>0)b.push({tag:'Clean Sheet',cls:'badge-clean',cat:'Quality',desc:'Zero fails'});
+  
+  // Ironclad: zero fails 2+ consecutive months
+  const ML2=['Jan','Feb','Mar','Apr'];const mi=ML2.indexOf(curMonth);
+  if(mi>=1){let consec=0;for(let i=mi;i>=0;i--){const md2=D.months[ML2[i]];if(!md2)break;const rps2=md2.roles[role]||[];const found=rps2.find(x=>x.n===r.n);if(found&&found.mf===0)consec++;else break;}if(consec>=2)b.push({tag:'Ironclad',cls:'badge-ironclad',cat:'Quality',desc:consec+' months zero fails'})}
+  
+  // Glass Cannon: top 25% W.Adh but 3+ fails
+  if(r.w&&r.w>=reps.map(x=>x.w||0).sort((a,b2)=>a-b2)[Math.floor(n*0.75)]&&r.mf>=3)b.push({tag:'Glass Cannon',cls:'badge-glass',cat:'Quality',desc:'High adherence, quality gap'});
+  
+  // Audit Survivor: zero fails, top quartile tasks (proxy for audit volume)
+  if(r.mf===0&&r.tt>=topQ)b.push({tag:'Audit Survivor',cls:'badge-survivor',cat:'Quality',desc:'High volume, zero fails'});
+  
+  // Client Favorite: zero Client Feedback fails
+  if(r.fd){const cfFails=(r.fd||[]).filter(f=>(f.b||'').includes('Client')||(f.c||'').includes('Client'));if(cfFails.length===0&&r.tt>0)b.push({tag:'Client Favorite',cls:'badge-client',cat:'Quality',desc:'Zero client feedback fails'})}
+  
+  // ── SPEED & EFFICIENCY ──
+  if(r.tot){
+    const totPeers=reps.filter(x=>x.tot);const tp=totPeers.length;
+    if(tp>=3){
+      const medArr=totPeers.map(x=>x.tot.med).sort((a,b2)=>a-b2);
+      const focArr=totPeers.map(x=>x.tot.foc).sort((a,b2)=>b2-a);
+      const totMinArr=totPeers.map(x=>x.tot.tot).sort((a,b2)=>b2-a);
+      
+      // Quick Draw: fast median + quality 90+
+      if(r.tot.med<=medArr[Math.floor(tp*0.25)]&&r.q&&r.q>=90)b.push({tag:'Quick Draw',cls:'badge-quick',cat:'Speed',desc:'Fast + high quality'});
+      
+      // Deep Diver: top quartile focus%
+      if(r.tot.foc>=focArr[Math.floor(tp*0.25)])b.push({tag:'Deep Diver',cls:'badge-deep',cat:'Speed',desc:'Top focus %'});
+      
+      // Multitasker: low solo% and OPS 85+
+      if(r.tot.sol<50&&r.o&&r.o>=85)b.push({tag:'Multitasker',cls:'badge-multi',cat:'Speed',desc:'Parallel work, strong OPS'});
+      
+      // Marathon: top quartile total minutes
+      if(r.tot.tot>=totMinArr[Math.floor(tp*0.25)])b.push({tag:'Marathon',cls:'badge-marathon',cat:'Speed',desc:'Top total minutes'});
+    }
+  }
+  
+  // ── VOLUME ──
+  if(r.tt>=topQ)b.push({tag:'Volume',cls:'badge-vol',cat:'Volume',desc:'Top quartile tasks'});
+  
+  // ── TREND & MOMENTUM ──
+  if(mi>=1){
+    const prevM=ML2[mi-1];const prevMd=D.months[prevM];
+    if(prevMd){
+      const prevReps=prevMd.roles[role]||[];const prevR=prevReps.find(x=>x.n===r.n);
+      if(prevR&&prevR.o&&r.o){
+        const delta=r.o-prevR.o;
+        if(delta>=5)b.push({tag:'Rising',cls:'badge-rising',cat:'Trend',desc:'+'+delta.toFixed(1)+' OPS vs '+prevM});
+        if(delta<=-5)b.push({tag:'Fading',cls:'badge-fading',cat:'Trend',desc:delta.toFixed(1)+' OPS vs '+prevM});
+      }
+      // Bounce Back: 3+ fails prev month, 0 this month
+      if(prevR&&prevR.mf>=3&&r.mf===0)b.push({tag:'Bounce Back',cls:'badge-bounce',cat:'Trend',desc:'From '+prevR.mf+' fails to zero'});
+    }
+    // Streak: 90+ for 3+ consecutive months
+    let streak=0;for(let i=mi;i>=0;i--){const md3=D.months[ML2[i]];if(!md3)break;const rps3=md3.roles[role]||[];const f3=rps3.find(x=>x.n===r.n);if(f3&&f3.o&&f3.o>=90)streak++;else break;}
+    if(streak>=3)b.push({tag:'Streak',cls:'badge-streak',cat:'Trend',desc:streak+' months at 90+'});
+  }
+  
+  // ── RISK & WATCH ──
+  if(r.o&&r.o<75||r.mf>=5)b.push({tag:'Red Zone',cls:'badge-red',cat:'Risk',desc:'Immediate attention needed'});
+  if(r.rr&&r.rr>10)b.push({tag:'Rework Flag',cls:'badge-rework',cat:'Risk',desc:'Rework rate '+r.rr+'%'});
+  
+  // Repeat Offender: same firm in 3+ fails
+  if(r.fd&&r.fd.length>=3){const firmCounts={};r.fd.forEach(f=>{const fm=f.f||'';if(fm)firmCounts[fm]=(firmCounts[fm]||0)+1});const repeat=Object.entries(firmCounts).find(([k,v])=>v>=3);if(repeat)b.push({tag:'Repeat Offender',cls:'badge-repeat',cat:'Risk',desc:repeat[1]+'x '+repeat[0].slice(0,25)})}
+  
+  return b;
+}
+function badges(r,reps,role){
+  if(!reps||!role)return allBadges(r,[r],'Service').map(b=>`<span class="rep-badge ${b.cls}" title="${b.desc}">${b.tag}</span>`).join('');
+  return allBadges(r,reps,role).map(b=>`<span class="rep-badge ${b.cls}" title="${b.desc}">${b.tag}</span>`).join('');
+}
+function archetype(r,reps){
+  const n=reps.length;const medVol=reps.map(x=>x.tt).sort((a,b)=>a-b)[Math.floor(n/2)]||1;const topQVol=reps.map(x=>x.tt).sort((a,b)=>b-a)[Math.floor(n*0.25)]||medVol;
+  if(r.o>=95&&r.mf===0&&r.tt>=topQVol)return{name:'Ace',color:'var(--green)',desc:'Top OPS, zero fails, top volume'};
+  if(r.mf>=3||r.o&&r.o<75)return{name:'Under Review',color:'var(--coral)',desc:'Needs coaching plan'};
+  if(r.tt>=topQVol&&r.o&&r.o<90)return{name:'Workhorse',color:'var(--amber)',desc:'High volume, refine quality'};
+  if(r.o>=90&&r.mf===0&&r.tt<medVol)return{name:'Precision',color:'var(--purple)',desc:'Quality over quantity'};
+  if(r.o>=85&&r.mf===0)return{name:'Steady Hand',color:'var(--teal)',desc:'Reliable, consistent'};
+  if(r.o>=90)return{name:'Elite',color:'var(--green)',desc:'Strong overall'};
+  return{name:'Developing',color:'var(--slate)',desc:'Building foundation'};
+}
+function catTag(c){if(!c)return'';if(c.includes('Leadership'))return'<span class="fail-cat-tag fc-ops">Ops Lead</span>';if(c.includes('Client'))return'<span class="fail-cat-tag fc-cf">Client FB</span>';if(c.includes('Sales'))return'<span class="fail-cat-tag fc-ose">Sales Esc</span>';if(c.includes('Aff'))return'<span class="fail-cat-tag fc-cf">Aff Exc</span>';return`<span class="fail-cat-tag fc-ose">${c.slice(0,20)}</span>`}
+
+function getM(){
+  if(curMonth==='YTD'){const ms=ML.filter(m=>D.months[m]&&D.months[m].org.ranked_count>0);if(!ms.length)return D.months.Mar;
+  const org={avg_ops:0,avg_wadh:0,avg_qs:0,total_tasks:0,total_fails:0,ranked_count:0,avg_rework:0};
+  ms.forEach(m=>{const o=D.months[m].org;org.avg_ops+=o.avg_ops;org.avg_wadh+=o.avg_wadh;org.avg_qs+=o.avg_qs;org.total_tasks+=o.total_tasks;org.total_fails+=o.total_fails;org.ranked_count=Math.max(org.ranked_count,o.ranked_count);org.avg_rework+=o.avg_rework});
+  const n=ms.length;org.avg_ops=Math.round(org.avg_ops/n*10)/10;org.avg_wadh=Math.round(org.avg_wadh/n*10)/10;org.avg_qs=Math.round(org.avg_qs/n*10)/10;org.avg_rework=Math.round(org.avg_rework/n*100)/100;
+  const roles={};ms.forEach(m=>{Object.entries(D.months[m].roles).forEach(([r,rps])=>{if(!roles[r])roles[r]={};rps.forEach(rp=>{if(!roles[r][rp.n])roles[r][rp.n]={...rp,oA:[],wA:[]};if(rp.o)roles[r][rp.n].oA.push(rp.o);if(rp.w)roles[r][rp.n].wA.push(rp.w)})})});
+  Object.keys(roles).forEach(r=>{roles[r]=Object.values(roles[r]).map(rp=>({...rp,o:rp.oA.length?Math.round(rp.oA.reduce((a,b)=>a+b,0)/rp.oA.length*10)/10:null,w:rp.wA.length?Math.round(rp.wA.reduce((a,b)=>a+b,0)/rp.wA.length*10)/10:null})).sort((a,b)=>(b.o||0)-(a.o||0))});
+  const teams={};Object.values(roles).flat().forEach(r=>{const t=r.tf||r.t;if(!t)return;if(!teams[t])teams[t]={ops:[],qs:[],wadh:[],tasks:0,errors:0,reps:[]};if(r.o)teams[t].ops.push(r.o);if(r.q)teams[t].qs.push(r.q);if(r.w)teams[t].wadh.push(r.w);teams[t].tasks+=r.tt||0;teams[t].errors+=r.mf||0;teams[t].reps.push({name:r.n,ops:r.o||0,role:r.r})});
+  const ts={};Object.entries(teams).sort((a,b)=>(b[1].ops.length?b[1].ops.reduce((x,y)=>x+y,0)/b[1].ops.length:0)-(a[1].ops.length?a[1].ops.reduce((x,y)=>x+y,0)/a[1].ops.length:0)).forEach(([t,v])=>{ts[t]={avg_ops:v.ops.length?Math.round(v.ops.reduce((a,b)=>a+b,0)/v.ops.length*10)/10:0,avg_qs:v.qs.length?Math.round(v.qs.reduce((a,b)=>a+b,0)/v.qs.length*10)/10:0,avg_wadh:v.wadh.length?Math.round(v.wadh.reduce((a,b)=>a+b,0)/v.wadh.length*10)/10:0,n:v.ops.length,tasks:v.tasks,errors:v.errors,reps:v.reps.sort((a,b)=>b.ops-a.ops)}});
+  const winners={};Object.entries(roles).forEach(([role,rps])=>{const v=Object.values(rps).filter(r=>r.o);if(v.length)winners[role]={name:v[0].n,ops:v[0].o,team:v[0].t}});
+  return{org,teams:ts,winners,roles};}
+  return D.months[curMonth]||D.months.Mar;
+}
+
+
+// ═══ SOURCES ═══
+function renderSources(){
+  let h=`<div class="section-hdr"><div><div class="section-title">🗂 Sources</div><div class="section-sub">Every metric traced to its source sheet, column, and calculation</div></div></div>`;
+
+  // Adherence
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Adherence Data (Per-task, Per-month)</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Role</th><th>Tasks Sheet</th><th>Adherence Sheet</th><th>Layout</th><th>Tasks</th><th>Months</th></tr></thead><tbody>`;
+  [['Service','Service (Tasks)','Service (Adh)','Row 1=tasks, Row 2=months','Chats, 1st Att, Job SLA, Bad Addr, Ad Hoc, Att Limit, Nudge Svr','Jan-Apr (4 cols per task)'],
+   ['ESC Lead','ESC Lead (Tasks)','ESC Lead (Adh)','Row 1=tasks, Row 2=months','Same as Service','Jan-Apr'],
+   ['QA','QA (Tasks)','QA (Adh)','Row 1=tasks, Row 2=months','Aff Prep, Aff Changes, Ad Hoc','Jan-Apr'],
+   ['Dispatch','Dispatch (Tasks)','Dispatch (Adh)','Tasks: R1=tasks R2=months<br>Adh: R1=months R2=tasks (SWAPPED)','Ad Hoc, Assign Server','Jan-Apr'],
+   ['Off App','Off App (Tasks)','Off App (Adh)','Row 1=tasks, Row 2=months','Same as Service','Jan-Apr']
+  ].forEach(r=>{h+=`<tr><td style="text-align:left;font-weight:600">${r[0]}</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">${r[1]}</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">${r[2]}</td><td style="font-size:11px">${r[3]}</td><td style="font-size:11px">${r[4]}</td><td style="font-size:11px">${r[5]}</td></tr>`});
+  h+=`</tbody></table></div></div>`;
+
+  // Weights
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Weight Configuration</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Role</th><th>Task</th><th>Weight</th></tr></thead><tbody>`;
+  Object.entries(WEIGHTS).forEach(([role,wts])=>{Object.entries(wts).forEach(([task,wt],i)=>{h+=`<tr><td style="text-align:left;font-weight:${i===0?700:400}">${i===0?role:''}</td><td>${task}</td><td style="font-family:\'DM Mono\',monospace;font-weight:700">${wt}%</td></tr>`})});
+  h+=`</tbody></table></div></div>`;
+
+  // Quality / Monday Boards
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Quality Fails (4 Monday Boards)</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Board</th><th>Sheet Name</th><th>Name Col</th><th>Fail Col</th><th>Date Col</th><th>Firm Col</th><th>Notes/Category</th><th>Attribution Logic</th></tr></thead><tbody>`;
+  h+=`<tr><td style="text-align:left;font-weight:600">Aff Exceptions</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">Affidavit Exceptions</td><td>Col M (13) attributee<br>Col J (10) person</td><td style="font-size:11px">Every row is a fail</td><td>Col I (9)</td><td>Col Q (17)<br><span style="color:var(--coral);font-size:10px">10% populated</span></td><td>Col B = category<br>Col K = note</td><td style="font-size:11px">Col N: "Attributee" → Col M gets fail.<br>"Both" → Col M + Col J.<br>"Neither" → skip.</td></tr>`;
+  h+=`<tr><td style="text-align:left;font-weight:600">Ops Sales Escal</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">Ops Sales Escal</td><td>Col G (7)</td><td>Col I (9)<br>"Fail" or "Pass"</td><td>Col J (10)</td><td>Col O (15)<br><span style="color:var(--amber);font-size:10px">40% populated</span></td><td>Col L = priority<br>Col M = notes</td><td style="font-size:11px">Only rows where Col I = "Fail"</td></tr>`;
+  h+=`<tr><td style="text-align:left;font-weight:600">Client Feedback</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">Client Feedback</td><td>Col G (7)</td><td>Col L (12)<br>"Fail" or "Pass"</td><td>Col I (9)</td><td>Col B (2)<br>Parse after last hyphen<br><span style="color:var(--green);font-size:10px">100% populated</span></td><td>Col J = notes</td><td style="font-size:11px">Only rows where Col L = "Fail"</td></tr>`;
+  h+=`<tr><td style="text-align:left;font-weight:600">Ops Leadership</td><td style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--purple)">Ops Leadership</td><td>Col H (8)</td><td>Col M (13)<br>"Fail" or "Pass"</td><td>Col K (11)<br>fallback Col D (4)</td><td>Col G (7)<br><span style="color:var(--green);font-size:10px">88% populated</span></td><td>Col O = category<br>Col P = notes</td><td style="font-size:11px">Only rows where Col M = "Fail"</td></tr>`;
+  h+=`</tbody></table></div></div>`;
+
+  // Formulas
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Scoring Formulas</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Metric</th><th style="text-align:left">Formula</th><th style="text-align:left">Notes</th></tr></thead><tbody>`;
+  [['PS (Performance Score)','adherence × 100','Per task type, 0-100'],
+   ['W.Adh','SUM(PS × weight) / SUM(weights with data)','Only tasks with data contribute'],
+   ['W.Quality %','monthly_fails / total_tasks × 100','From 4 Monday boards, bucketed by date'],
+   ['Anchor %','3% + (75 / total_tasks) × 100','Volume-adjusted. k=75. More tasks = tighter standard'],
+   ['Quality Score','100 - (W.Quality% / Anchor%) × 100','Clamped 0-100. Zero fails = 100'],
+   ['OPS','W.Adh × 40% + Quality Score × 60%','Quality carries more weight by design'],
+   ['Percentile filter','Bottom 10th pctile by task count excluded','Per role, per month. Adapts to data volume']
+  ].forEach(r=>{h+=`<tr><td style="text-align:left;font-weight:700">${r[0]}</td><td style="text-align:left;font-family:\'DM Mono\',monospace;font-size:12px">${r[1]}</td><td style="text-align:left;font-size:12px;color:var(--text-2)">${r[2]}</td></tr>`});
+  h+=`</tbody></table></div></div>`;
+
+  // Rework Rate
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Rework Rate</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Month</th><th>Column</th><th>Field</th></tr></thead><tbody>`;
+  [['Jan','Col 7','Reworked Rate (Not Server)'],['Feb','Col 13','Reworked Rate (Not Server)'],['Mar','Col 19','Reworked Rate (Not Server)'],['Apr','Col 25','Reworked Rate (Not Server)']].forEach(r=>{h+=`<tr><td style="text-align:left;font-weight:600">${r[0]}</td><td style="font-family:\'DM Mono\',monospace">${r[1]}</td><td style="font-size:12px">${r[2]}</td></tr>`});
+  h+=`</tbody></table><div style="padding:8px 16px;font-size:11px;color:var(--text-2);border-top:1px solid var(--border)">Sheet: <strong>Rework Rate</strong>. Pattern: 6 columns per month (Server RR, Server Count, Reworked Count, Not-Server Count, Job Count, Not-Server Rate).</div></div>`;
+
+  // Time on Tasks
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Time on Tasks</div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left">Metric</th><th>Source Column</th><th>Aggregation</th></tr></thead><tbody>`;
+  [['Person','Col A (1)','Group-by key'],['Work Date','Col D (4)','Monthly bucketing (YYYY-MM)'],['Task Min','Col V (22)','median() for Med Min, sum() for Total Min'],['Focused Min','Col T (20)','sum(Focused) / sum(Task Min) for Focus%'],['Pace','Col AB (28)','count(long)/total for Long%, count(rapid)/total for Rapid%'],['Overlap','Col AC (29)','count(solo)/total for Solo%']].forEach(r=>{h+=`<tr><td style="text-align:left;font-weight:600">${r[0]}</td><td style="font-family:\'DM Mono\',monospace">${r[1]}</td><td style="font-size:12px">${r[2]}</td></tr>`});
+  h+=`</tbody></table><div style="padding:8px 16px;font-size:11px;color:var(--text-2);border-top:1px solid var(--border)">Sheet: <strong>Time on Tasks</strong>. 50,002 rows covering 12 people across Jan-Apr.</div></div>`;
+
+  // Roster
+  h+=`<div class="table-wrap" style="margin-bottom:20px"><div class="table-toolbar"><div class="table-title">Roster & Team Mapping</div></div><div style="padding:14px 18px;font-size:13px;color:var(--text-2);line-height:1.6">Sheet: <strong>Roster1</strong>. Multiple column groups (3 cols each: Team / Name / Role). Role normalization: "Escalation Leads" → "ESC Lead". Only reps matching a role appear in that role's tab. Fails only count against reps within their assigned role.</div></div>`;
+
+  // Disclaimers
+  h+=`<div style="background:var(--gold-pale);border:1px solid var(--gold-lt);border-radius:10px;padding:14px 18px;font-size:12px;color:var(--text);line-height:1.6"><strong style="color:var(--gold)">Data notes:</strong><ul style="margin:6px 0 0 16px"><li>Law firm data was not captured from the start on all Monday boards. Firm attribution may be incomplete.</li><li>Aff Exceptions firm column (Col Q) is only 10% populated.</li><li>Time on Tasks covers 12 of ~70 reps (BigQuery pipeline).</li><li>Quality anchor (k=75) is reviewed each scoring cycle.</li><li>Rework rate is separate from quality audit fails.</li><li>Bottom 10th percentile by task count excluded from role rankings.</li></ul></div>`;
+
+  document.getElementById('tab-sources').innerHTML=h;
+}
+
+function init(){
+  let tb='';TABS.forEach((t,i)=>{tb+=`<button class="tab-btn${i===0?' active':''}" onclick="switchTab('${t.id}',this)">${t.label}</button>`});
+  document.getElementById('tbar').innerHTML=tb;
+  let mn='';TABS.forEach(t=>{mn+=`<div class="tab-panel${t.id==='summary'?' active':''}" id="tab-${t.id}"></div>`});
+  document.getElementById('mn').innerHTML=mn;
+  renderAll();
+}
+function renderAll(){renderSummary();renderSources();['Service','ESC Lead','QA','Dispatch','Off App'].forEach(r=>{renderRoleTab(TABS.find(t=>t.role===r).id,r)});renderTeam();renderPersonal();renderClient();renderTrends();renderGuide()}
+function switchTab(id,btn){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');btn.classList.add('active')}
+function setMonth(m,btn){document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('act','ytd'));if(m==='YTD')btn.classList.add('ytd');else btn.classList.add('act');curMonth=m;renderAll()}
+let dark=false;function toggleDark(){dark=!dark;document.documentElement.setAttribute('data-theme',dark?'dark':'');document.getElementById('darkToggle').textContent=dark?'Light':'Dark'}
+
+function failCards(fd){if(!fd||!fd.length)return'<div class="no-fails-msg">No recorded fails this period.</div>';return'<div class="fail-card-row">'+fd.map(f=>`<div class="fail-card"><div class="fail-card-top">${catTag(f.c||f.b)}<span class="fail-date">${f.date||''}</span>${f.f?`<span class="fail-firm">${f.f}</span>`:''}</div>${f.reason&&f.reason!=='nan'?`<div class="fail-reason">${f.reason}</div>`:''}${f.note&&f.note!=='nan'?`<div class="fail-notes">${f.note}</div>`:''}${f.j&&f.j.startsWith('http')?`<a class="fail-link" href="${f.j}" target="_blank">View Job</a>`:''}</div>`).join('')+'</div>'}
+
+// ═══ SUMMARY ═══
+function renderSummary(){
+  const md=getM();const o=md.org;const ts=Object.entries(md.teams).sort((a,b)=>b[1].avg_ops-a[1].avg_ops);
+  const label=curMonth==='YTD'?'Year to Date (Jan-Apr)':curMonth+' 2026';
+  let h=`<div class="section-hdr"><div><div class="section-title">${label} Overview</div><div class="section-sub">Three-pillar performance: Adherence, Quality, Time on Tasks</div></div></div>`;
+  h+=`<div class="stat-grid">`;
+  h+=`<div class="stat-card" style="--accent:var(--teal)"><div class="stat-label">Org Avg OPS</div><div class="stat-value">${o.avg_ops}</div><div class="stat-sub">${o.ranked_count} ranked reps</div></div>`;
+  h+=`<div class="stat-card" style="--accent:var(--green)"><div class="stat-label">Avg W.Adh</div><div class="stat-value">${o.avg_wadh}</div><div class="stat-sub">40% of OPS</div></div>`;
+  h+=`<div class="stat-card" style="--accent:var(--purple)"><div class="stat-label">Avg Quality</div><div class="stat-value">${o.avg_qs}</div><div class="stat-sub">60% of OPS</div></div>`;
+  h+=`<div class="stat-card" style="--accent:var(--coral)"><div class="stat-label">Total Fails</div><div class="stat-value">${o.total_fails}</div><div class="stat-sub">From 4 Monday boards</div></div>`;
+  h+=`<div class="stat-card" style="--accent:var(--gold)"><div class="stat-label">Total Tasks</div><div class="stat-value">${o.total_tasks.toLocaleString()}</div><div class="stat-sub">All roles combined</div></div>`;
+  h+=`<div class="stat-card" style="--accent:var(--orange)"><div class="stat-label">Avg Rework</div><div class="stat-value">${o.avg_rework}%</div><div class="stat-sub">Not-server rework rate</div></div>`;
+  h+=`</div>`;
+  // Team cards
+  h+=`<div class="team-grid">`;
+  ts.forEach(([tn,tv])=>{const s=tn.split('(')[0].trim();h+=`<div class="team-card"><div class="team-card-hdr"><div class="team-card-name">${s}</div><span class="score-chip ${cc(tv.avg_ops)}">${tv.avg_ops}</span></div><div class="team-card-body"><div class="team-metric"><span class="tm-label">Reps</span><span class="tm-val">${tv.n}</span></div><div class="team-metric"><span class="tm-label">W.Adh</span><span class="tm-val">${tv.avg_wadh}</span></div><div class="team-metric"><span class="tm-label">Quality</span><span class="tm-val">${tv.avg_qs}</span></div><div class="team-metric"><span class="tm-label">Fails</span><span class="tm-val" style="color:${tv.errors>0?'var(--coral)':'var(--green)'}">${tv.errors}</span></div><div class="team-metric"><span class="tm-label">Tasks</span><span class="tm-val">${tv.tasks.toLocaleString()}</span></div></div></div>`});
+  h+=`</div>`;
+  // Insights
+  h+=`<div class="insights-grid">`;
+  // Watch list
+  const allR=[];Object.values(md.roles).forEach(rps=>rps.forEach(r=>allR.push(r)));
+  const watch=allR.filter(r=>r.mf>=3).sort((a,b)=>b.mf-a.mf);
+  h+=`<div class="insight-card"><div class="insight-card-hdr" style="background:var(--coral-lt)"><span class="ic-icon">&#9888;&#65039;</span><div><div class="ic-title" style="color:var(--coral)">Watch List</div><div class="ic-sub">Reps with 3+ fails</div></div></div><div class="insight-body">${watch.map(r=>`<div class="insight-item"><div class="insight-dot" style="background:var(--coral)"></div><div class="insight-text"><strong>${r.n}</strong> (${r.t}) — <span class="flag">${r.mf} fails</span>, OPS ${r.o}</div></div>`).join('')||'<div class="insight-item"><div class="insight-text" style="color:var(--green)">No reps above threshold.</div></div>'}</div></div>`;
+  // Top performers
+  const top=allR.filter(r=>r.mf===0&&r.tt>1000).sort((a,b)=>b.o-a.o).slice(0,6);
+  h+=`<div class="insight-card"><div class="insight-card-hdr" style="background:var(--teal-lt)"><span class="ic-icon">&#11088;</span><div><div class="ic-title" style="color:var(--teal)">Top Performers</div><div class="ic-sub">Zero fails, 1000+ tasks</div></div></div><div class="insight-body">${top.map(r=>`<div class="insight-item"><div class="insight-dot" style="background:var(--green)"></div><div class="insight-text"><strong>${r.n}</strong> (${r.t}) — <span class="good">Zero fails</span>, OPS ${r.o}, ${r.tt.toLocaleString()} tasks</div></div>`).join('')}</div></div>`;
+  h+=`</div>`;
+  document.getElementById('tab-summary').innerHTML=h;
+}
+
+// ═══ ROLE TAB ═══
+function renderRoleTab(tid,role){
+  const md=getM();let reps=md.roles[role]||[];const n=reps.length;const wts=WEIGHTS[role];const tkO=Object.keys(wts);const rc=RC[role];
+  if(!n){document.getElementById('tab-'+tid).innerHTML=`<div style="text-align:center;padding:40px;color:var(--text-2)">No data for ${role} in ${curMonth}</div>`;return}
+  // Filter: exclude reps working less than 60% of expected days
+  // Estimate expected days per month (M-F, 4 weeks = ~22 days, Apr partial ~15)
+  const WORK_DAYS={Jan:22,Feb:20,Mar:22,Apr:15,YTD:79};
+  const expDays=WORK_DAYS[curMonth]||22;
+  // Estimate working days from task volume: use role median as "full month" benchmark
+  const taskArr=reps.map(r=>r.tt).sort((a,b)=>a-b);
+  const medianTasks=taskArr[Math.floor(taskArr.length/2)]||1;
+  // A rep at 60% of median is roughly working 60% of the month
+  const minTasks=Math.round(medianTasks*0.5);
+  const filtered=reps.filter(r=>r.tt>=minTasks);
+  const excluded=reps.filter(r=>r.tt<minTasks);
+  const repsOrig=reps;reps=filtered;const n2=reps.length;
+  let h=`<div class="section-hdr"><div><div class="section-title">${role}</div><div class="section-sub">${n2} reps · Sorted by OPS · ${curMonth==='YTD'?'YTD':curMonth+' 2026'}</div></div></div>`;
+  // Excluded reps notice
+  if(excluded.length){h+=`<div style="background:var(--gold-pale);border:1px solid var(--gold-lt);border-radius:8px;padding:8px 14px;margin-bottom:16px;font-size:12px;color:var(--text-2);line-height:1.5"><strong style="color:var(--gold)">${excluded.length} rep${excluded.length>1?'s':''} excluded</strong> (below 50% of role median volume, &lt;${minTasks} tasks): ${excluded.map(r=>r.n+' ('+r.tt+' tasks)').join(', ')}</div>`}
+  // Bar chart
+  h+=`<div class="bar-section"><div class="bar-section-title">OPS Distribution</div><div class="bar-2col">`;
+  reps.forEach(r=>{const v=r.o||r.w||0;const c=v>=90?'var(--green)':v>=75?'var(--amber)':'var(--coral)';h+=`<div class="bar-row"><div class="bar-name">${r.n}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.min(v,100)}%;background:${c}"></div></div><div class="bar-val" style="color:${c}">${Math.round(v*10)/10}</div></div>`});
+  h+=`</div></div>`;
+  // Table
+  h+=`<div class="table-wrap"><div class="table-toolbar"><div class="table-title">${role} Rankings <span class="table-count">${n} reps</span></div></div><div class="scroll-x"><table><thead><tr><th style="width:40px">Rank</th><th style="text-align:left;min-width:160px">Name</th><th>OPS</th><th>W.Adh</th><th>Quality</th><th>Fails</th><th>Tasks</th><th>Rework</th></tr></thead><tbody>`;
+  reps.forEach((r,i)=>{
+    h+=`<tr onclick="togX(this)" style="cursor:pointer"><td class="rank-cell">${i+1<=3?["🥇","🥈","🥉"][i]:""} ${i+1}</td><td style="text-align:left"><strong>${r.n}</strong>${badges(r,reps,role)}<span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:4px;background:var(--off);color:${archetype(r,reps).color}">${archetype(r,reps).name}</span><br><span style="font-size:11px;color:var(--text-2)">${r.tf||r.t}</span></td>`;
+    h+=`<td>${r.o?chip(r.o):'<span class="score-chip na">Pending</span>'}</td><td>${chip(r.w)}</td><td>${chip(r.q)}</td>`;
+    h+=`<td>${fbadge(r.mf||0)}</td><td style="font-family:'DM Mono',monospace">${(r.tt||0).toLocaleString()}</td><td style="font-family:'DM Mono',monospace">${r.rr||0}%</td></tr>`;
+    // Expand row
+    h+=`<tr class="expand-row"><td colspan="8" class="expand-cell"><div class="expand-inner">`;
+    h+=`<div class="pill-nav"><button class="pill-btn active" onclick="sp(this,0)">Performance</button><button class="pill-btn" onclick="sp(this,1)">Quality</button><button class="pill-btn" onclick="sp(this,2)">Time on Tasks</button><button class="pill-btn" onclick="sp(this,3)">Raw Math</button></div>`;
+    // PERF
+    h+=`<div class="pill-panel active"><div style="font-size:13px;font-weight:700;margin-bottom:8px">Performance Breakdown</div><div class="task-grid" style="grid-template-columns:repeat(${tkO.length},minmax(0,1fr))">`;
+    tkO.forEach(tn=>{const ps=r.ps?r.ps[tn]:null;const tasks=r.tk?r.tk[tn]||0:0;const wt=wts[tn];const pc=ps?ps>=90?'var(--green)':ps>=75?'var(--amber)':'var(--coral)':'var(--slate)';h+=`<div class="task-card"><div class="task-name">${TS[tn]||tn}</div><div class="task-score" style="color:${pc}">${ps?Math.round(ps):'N/A'}</div><div class="task-meta">${tasks.toLocaleString()} tasks</div><div class="task-wt">${wt}%</div></div>`});
+    h+=`</div><div style="font-size:12px;margin-top:6px"><strong>W.Adh: ${r.w}</strong> (#${i+1}/${n}) · Tasks: ${(r.tt||0).toLocaleString()}</div></div>`;
+    // QUAL
+    h+=`<div class="pill-panel"><div style="font-size:13px;font-weight:700;margin-bottom:8px">Quality Profile</div><div class="qual-strip">`;
+    h+=`<div class="qs-item"><div class="qs-label">Errors</div><div class="qs-val" style="color:${(r.mf||0)>0?'var(--coral)':'var(--green)'}">${r.mf||0}</div></div>`;
+    h+=`<div class="qs-item"><div class="qs-label">W.Quality</div><div class="qs-val">${r.wq||0}%</div></div>`;
+    h+=`<div class="qs-item"><div class="qs-label">Quality Score</div><div class="qs-val">${r.q!=null?r.q:'N/A'}</div></div>`;
+    h+=`<div class="qs-item"><div class="qs-label">Rework</div><div class="qs-val">${r.rr||0}%</div></div></div>`;
+    if(r.mf>0&&r.fd&&r.fd.length){h+=`<div style="font-size:12px;font-weight:700;color:var(--coral);margin:8px 0">${r.mf} Fail${r.mf>1?'s':''}</div>${failCards(r.fd)}`}
+    else if(r.mf===0)h+=`<div class="zero-badge">Zero errors this period</div>`;
+    h+=`</div>`;
+    // TOT
+    h+=`<div class="pill-panel"><div style="font-size:13px;font-weight:700;margin-bottom:8px">Time on Tasks</div>`;
+    if(r.tot){h+=`<div class="tot-grid"><div class="tot-card"><div class="tot-label">Med Min</div><div class="tot-val">${r.tot.med}</div></div><div class="tot-card"><div class="tot-label">Focus%</div><div class="tot-val">${r.tot.foc}%</div></div><div class="tot-card"><div class="tot-label">Long%</div><div class="tot-val">${r.tot.lng}%</div></div><div class="tot-card"><div class="tot-label">Rapid%</div><div class="tot-val">${r.tot.rap}%</div></div><div class="tot-card"><div class="tot-label">Solo%</div><div class="tot-val">${r.tot.sol}%</div></div><div class="tot-card"><div class="tot-label">Total Min</div><div class="tot-val">${r.tot.tot.toLocaleString()}</div></div></div>`}
+    else h+=`<div style="font-size:11px;color:var(--text-2)">No ToT data for this rep. (12 people have ToT data from BigQuery.)</div>`;
+    h+=`</div>`;
+    // RAW MATH
+    h+=`<div class="pill-panel"><div style="font-size:13px;font-weight:700;margin-bottom:8px">Raw Math Verification</div><div class="raw-math">`;
+    h+=`<strong>W.Adh Calculation:</strong>\n`;
+    let mathParts=[];tkO.forEach(tn=>{const ps=r.ps?r.ps[tn]:null;const wt=wts[tn];if(ps!=null)mathParts.push(`  ${TS[tn]||tn}: PS=${ps} x wt=${wt}% = ${Math.round(ps*wt)/100}`)});
+    h+=mathParts.join('\n')+'\n';
+    h+=`  <strong>W.Adh = ${r.w}</strong>\n\n`;
+    h+=`<strong>Quality Calculation:</strong>\n`;
+    h+=`  Fails: ${r.mf||0} / Tasks: ${r.tt||0}\n`;
+    h+=`  W.Quality: ${r.wq||0}%\n`;
+    const anch=r.tt>0?(0.03+(75/r.tt)):0;
+    h+=`  Anchor: 3% + (75/${r.tt||0}) = ${Math.round(anch*10000)/100}%\n`;
+    if(r.mf>0){h+=`  QS = 100 - (${r.wq||0}% / ${Math.round(anch*10000)/100}%) x 100 = <strong>${r.q}</strong>\n`}
+    else{h+=`  Zero fails → <strong>QS = 100</strong>\n`}
+    h+=`\n<strong>OPS = W.Adh(${r.w}) x 40% + QS(${r.q}) x 60% = <strong>${r.o}</strong></strong>\n\n`;
+    h+=`</div></div>`;
+    h+=`</div></td></tr>`;
+  });
+  h+=`</tbody></table></div></div>`;
+
+  // ═══ RAW MATH VERIFICATION TABLE ═══
+  h+=`<div class="table-wrap" style="margin-top:20px"><div class="table-toolbar"><div class="table-title">Raw Math Verification <span class="table-count">Every calculation, every rep</span></div></div><div class="scroll-x"><table><thead><tr><th style="text-align:left;min-width:130px">Name</th>`;
+  tkO.forEach(tn=>{h+=`<th>${TS[tn]||tn}<br><span style="font-size:9px;font-weight:400">(PS x ${wts[tn]}%)</span></th>`});
+  h+=`<th>W.Adh</th><th>Fails</th><th>Tasks</th><th>W.Qual%</th><th>Anchor%</th><th>QS</th><th style="background:var(--gold);color:var(--navy)">OPS</th></tr></thead><tbody>`;
+  reps.forEach((r,i)=>{
+    h+=`<tr><td style="text-align:left;font-weight:600;font-size:12px">${r.n}<br><span style="font-size:10px;color:var(--text-2);font-weight:400">${r.tf||r.t}</span></td>`;
+    // Per-task PS x weight
+    let wadhParts=[];
+    tkO.forEach(tn=>{
+      const ps=r.ps?r.ps[tn]:null;const wt=wts[tn];
+      const contrib=ps!=null?Math.round(ps*wt)/100:0;
+      if(ps!=null)wadhParts.push(contrib);
+      const pc=ps?ps>=90?'var(--green)':ps>=75?'var(--amber)':'var(--coral)':'var(--slate)';
+      h+=`<td style="font-family:'DM Mono',monospace;font-size:11px"><span style="color:${pc}">${ps!=null?ps:'--'}</span><br><span style="font-size:9px;color:var(--text-2)">${ps!=null?'×'+wt+'%='+contrib.toFixed(1):'--'}</span></td>`;
+    });
+    // W.Adh
+    h+=`<td style="font-family:'DM Mono',monospace;font-weight:700">${r.w}</td>`;
+    // Fails
+    h+=`<td style="font-family:'DM Mono',monospace;color:${(r.mf||0)>0?'var(--coral)':'var(--green)'}">${r.mf||0}</td>`;
+    // Tasks
+    h+=`<td style="font-family:'DM Mono',monospace">${(r.tt||0).toLocaleString()}</td>`;
+    // W.Qual%
+    h+=`<td style="font-family:'DM Mono',monospace">${r.wq||0}%</td>`;
+    // Anchor
+    const anch=r.tt>0?(3+(75/r.tt)*100):0;
+    h+=`<td style="font-family:'DM Mono',monospace;font-size:10px">${r.tt>0?(3+7500/r.tt).toFixed(2):'--'}%</td>`;
+    // QS
+    const qc=r.q?r.q>=90?'var(--green)':r.q>=75?'var(--amber)':'var(--coral)':'var(--slate)';
+    h+=`<td style="font-family:'DM Mono',monospace;font-weight:600;color:${qc}">${r.q!=null?r.q:'N/A'}</td>`;
+    // OPS
+    h+=`<td style="font-family:'DM Mono',monospace;font-weight:700;font-size:13px;background:rgba(201,144,12,0.06)">${r.o||'N/A'}</td>`;
+    // Source
+    h+=``;
+    h+=`</tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  h+=`<div style="padding:8px 16px;font-size:11px;color:var(--text-2);border-top:1px solid var(--border)">W.Adh = SUM(PS x weight). QS = 100 - (W.Qual% / Anchor%) x 100. OPS = W.Adh x 40% + QS x 60%. See <strong>Sources</strong> tab for full detail.</div></div>`;
+
+  document.getElementById('tab-'+tid).innerHTML=h;
+}
+function togX(tr){const xr=tr.nextElementSibling;if(!xr||!xr.classList.contains('expand-row'))return;const w=xr.classList.contains('open');tr.closest('tbody').querySelectorAll('.expand-row.open').forEach(r=>r.classList.remove('open'));if(!w)xr.classList.add('open')}
+function sp(btn,idx){const pn=btn.closest('.pill-nav');pn.querySelectorAll('.pill-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const card=btn.closest('.expand-inner');card.querySelectorAll('.pill-panel').forEach((p,i)=>{p.classList.toggle('active',i===idx)})}
+
+// ═══ TEAM ═══
+function renderTeam(){
+  const md=getM();const ts=Object.entries(md.teams).sort((a,b)=>b[1].avg_ops-a[1].avg_ops);
+  let h=`<div class="section-hdr"><div><div class="section-title">Team View</div><div class="section-sub">Cross-pillar heatmap · ${curMonth==='YTD'?'YTD':curMonth+' 2026'}</div></div></div>`;
+  h+=`<div class="table-wrap"><div class="scroll-x"><table><thead><tr><th style="text-align:left">Team</th><th>Avg OPS</th><th>W.Adh</th><th>Quality</th><th>Fails</th><th>Reps</th><th>Tasks</th></tr></thead><tbody>`;
+  ts.forEach(([tn,tv])=>{const s=tn.split('(')[0].trim();h+=`<tr><td style="text-align:left;font-weight:600">${s}</td><td>${chip(tv.avg_ops)}</td><td>${chip(tv.avg_wadh)}</td><td>${chip(tv.avg_qs)}</td><td style="font-family:'DM Mono',monospace;color:${tv.errors>0?'var(--coral)':'var(--green)'}">${tv.errors}</td><td>${tv.n}</td><td style="font-family:'DM Mono',monospace">${tv.tasks.toLocaleString()}</td></tr>`});
+  h+=`</tbody></table></div></div>`;
+  h+=`<div class="team-grid">`;
+  ts.forEach(([tn,tv],i)=>{const s=tn.split('(')[0].trim();h+=`<div class="team-card"><div class="team-card-hdr"><div class="team-card-name">${s}</div><span style="font-size:11px;color:#8EA3C3">#${i+1} · ${tv.n} reps</span></div><div class="team-card-body">${(tv.reps||[]).slice(0,8).map(r=>`<div class="team-metric"><span class="tm-label">${r.name}</span><span class="tm-val"><span class="score-chip ${cc(r.ops)}" style="font-size:11px">${Math.round(r.ops)}</span></span></div>`).join('')}${(tv.reps||[]).length>8?`<div style="font-size:10px;color:var(--text-2);padding-top:4px">+${tv.reps.length-8} more</div>`:''}</div></div>`});
+  h+=`</div>`;
+  document.getElementById('tab-team').innerHTML=h;
+}
+
+// ═══ PERSONAL ═══
+function renderPersonal(){
+  const md=getM();const all=[];Object.entries(md.roles).forEach(([role,rps])=>{rps.forEach(r=>all.push({...r,role}))});
+  all.sort((a,b)=>(a.n||'').localeCompare(b.n||''));
+  let h=`<div class="pv-selector-wrap"><select id="pvSel" onchange="renderPVCard()">${all.map(r=>`<option value="${r.n}">${r.n} (${r.role})</option>`).join('')}</select></div><div id="pvContent"></div>`;
+  document.getElementById('tab-personal').innerHTML=h;renderPVCard();
+}
+function renderPVCard(){
+  const md=getM();const name=document.getElementById('pvSel').value;let rep,role;
+  Object.entries(md.roles).forEach(([r,rps])=>{const f=rps.find(x=>x.n===name);if(f){rep=f;role=r}});if(!rep)return;
+  const rc=RC[role]||'var(--teal)';const rps=md.roles[role];const n=rps.length;const rk=rps.filter(r=>(r.o||0)>(rep.o||0)).length+1;
+  const wts=WEIGHTS[role];const tkO=Object.keys(wts);
+  const arch=archetype(rep,rps);
+  let h=`<div class="pv-wrap"><div class="pv-header"><div class="pv-header-role">${role} · ${rep.tf||rep.t}</div><div class="pv-header-name">${rep.n} ${badges(rep,rps,role)} <span style="font-size:13px;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,.12);color:${arch.color};font-weight:700;margin-left:8px">${arch.name}</span></div><div class="pv-header-meta">${curMonth==='YTD'?'YTD':'Month: '+curMonth+' 2026'} · Rank #${rk} of ${n} · ${arch.desc}</div>`;
+  h+=`<div class="pv-score-banner"><div class="pv-score-card"><div class="pv-score-label">OPS</div><div class="pv-score-value ${rep.o?cc(rep.o):''}">${rep.o||'N/A'}</div><div style="font-size:10px;color:#8EA3C3">#${rk} of ${n}</div></div>`;
+  h+=`<div class="pv-score-card"><div class="pv-score-label">W.Adh</div><div class="pv-score-value">${rep.w||'N/A'}</div></div>`;
+  h+=`<div class="pv-score-card"><div class="pv-score-label">Quality</div><div class="pv-score-value ${rep.q?cc(rep.q):''}">${rep.q!=null?rep.q:'N/A'}</div></div>`;
+  h+=`<div class="pv-score-card"><div class="pv-score-label">Tasks</div><div class="pv-score-value">${(rep.tt||0).toLocaleString()}</div></div>`;
+  h+=`<div class="pv-score-card"><div class="pv-score-label">Fails</div><div class="pv-score-value" style="color:${(rep.mf||0)>0?'#F87171':'#34D399'}">${rep.mf||0}</div></div></div></div>`;
+  h+=`<div class="pv-body">`;
+  h+=`<div class="disc-box">This summary is an estimation based on available data. Use as a conversation starter, not a definitive assessment.</div>`;
+  // ═══ SUMMARY (month-aware) ═══
+  const roleAvgOps=Math.round(rps.filter(x=>x.o).reduce((a,x)=>a+x.o,0)/Math.max(rps.filter(x=>x.o).length,1)*10)/10;
+  const roleAvgFails=Math.round(rps.reduce((a,x)=>a+(x.mf||0),0)/rps.length*10)/10;
+  const pctile=Math.round((1-rk/n)*100);
+  h+=`<div class="pv-section-title">Summary</div>`;
+  h+=`<div style="background:var(--navy);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;color:#CBD5E1;line-height:1.7">`;
+  h+=`<strong style="color:#fff">${rep.n}</strong> is classified as <strong style="color:${arch.color}">${arch.name}</strong> for ${curMonth==='YTD'?'the year to date':curMonth+' 2026'}. `;
+  if(rep.o)h+=`OPS of <strong style="color:#fff">${rep.o}</strong> places them at the <strong style="color:#fff">${pctile}th percentile</strong> (#${rk} of ${n}) in ${role}${rep.o>roleAvgOps?', <strong style="color:#34D399">above</strong>':rep.o<roleAvgOps?', <strong style="color:#F87171">below</strong>':' right at'} the role average of ${roleAvgOps}. `;
+  // Quality context
+  if(rep.mf>0)h+=`Quality shows <strong style="color:#F87171">${rep.mf} fail${rep.mf>1?'s':''}</strong> this period (role avg ${roleAvgFails}). `;
+  else if(rep.tt>0)h+=`<strong style="color:#34D399">Clean quality sheet</strong> with zero fails (role avg ${roleAvgFails}). `;
+  // Strongest/weakest task
+  if(Object.keys(rep.ps||{}).length>1){const sorted=Object.entries(rep.ps).sort((a,b)=>b[1]-a[1]);const best=sorted[0];const worst=sorted[sorted.length-1];if(best&&worst&&best[1]!==worst[1])h+=`Strongest task: <strong style="color:#fff">${TS[best[0]]||best[0]}</strong> (${best[1]}). Area to develop: <strong style="color:#fff">${TS[worst[0]]||worst[0]}</strong> (${worst[1]}). `}
+  // ToT context
+  if(rep.tot){if(rep.tot.foc<15)h+=`Focus at ${rep.tot.foc}% suggests parallel work patterns. `;if(rep.tot.lng>30)h+=`${rep.tot.lng}% of tasks classified as long. `}
+  h+=`Volume: <strong style="color:#fff">${(rep.tt||0).toLocaleString()}</strong> tasks.`;
+  h+=`</div>`;
+  // Task breakdown
+  // Peer comparison
+  const roleAvg=Math.round(rps.filter(x=>x.o).reduce((a,x)=>a+x.o,0)/Math.max(rps.filter(x=>x.o).length,1)*10)/10;
+  const roleAvgW=Math.round(rps.filter(x=>x.w).reduce((a,x)=>a+x.w,0)/Math.max(rps.filter(x=>x.w).length,1)*10)/10;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px">`;
+  h+=`<div style="background:var(--off);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--text-2)">OPS vs ${role} Avg</div><div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:${(rep.o||0)>=roleAvg?'var(--green)':'var(--coral)'}">${rep.o?((rep.o-roleAvg)>0?'+':'')+(rep.o-roleAvg).toFixed(1):'--'}</div><div style="font-size:10px;color:var(--text-2)">avg: ${roleAvg}</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--text-2)">W.Adh vs ${role} Avg</div><div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:${(rep.w||0)>=roleAvgW?'var(--green)':'var(--coral)'}">${rep.w?((rep.w-roleAvgW)>0?'+':'')+(rep.w-roleAvgW).toFixed(1):'--'}</div><div style="font-size:10px;color:var(--text-2)">avg: ${roleAvgW}</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--text-2)">Percentile</div><div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace">${Math.round((1-rk/n)*100)}th</div><div style="font-size:10px;color:var(--text-2)">#${rk} of ${n}</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:10px;padding:10px;text-align:center"><div style="font-size:10px;font-weight:600;color:var(--text-2)">Fails vs ${role} Avg</div><div style="font-size:20px;font-weight:700;font-family:'DM Mono',monospace;color:${(rep.mf||0)<=Math.round(rps.reduce((a,x)=>a+(x.mf||0),0)/rps.length)?'var(--green)':'var(--coral)'}">${rep.mf||0}</div><div style="font-size:10px;color:var(--text-2)">avg: ${(rps.reduce((a,x)=>a+(x.mf||0),0)/rps.length).toFixed(1)}</div></div>`;
+  h+=`</div>`;
+  h+=`<div class="pv-section-title">Performance Breakdown</div><div class="task-grid" style="grid-template-columns:repeat(${tkO.length},minmax(0,1fr))">`;
+  tkO.forEach(tn=>{const ps=rep.ps?rep.ps[tn]:null;const tasks=rep.tk?rep.tk[tn]||0:0;const wt=wts[tn];const pc=ps?ps>=90?'var(--green)':ps>=75?'var(--amber)':'var(--coral)':'var(--slate)';h+=`<div class="task-card"><div class="task-name">${TS[tn]||tn}</div><div class="task-score" style="color:${pc}">${ps?Math.round(ps):'N/A'}</div><div class="task-meta">${tasks.toLocaleString()}</div><div class="task-wt">${wt}%</div></div>`});
+  h+=`</div>`;
+  // Quality
+  h+=`<div class="pv-section-title">Quality</div>`;
+  if(rep.mf>0){h+=`<div style="color:var(--coral);font-weight:700;margin-bottom:8px">${rep.mf} Fail${rep.mf>1?'s':''}</div>${failCards(rep.fd)}`}
+  else h+=`<div class="zero-badge">Zero errors this period</div>`;
+  // ToT
+  if(rep.tot){
+    // Compute ToT rankings vs peers who have ToT data
+    const totPeers=rps.filter(x=>x.tot);const tp=totPeers.length;
+    const focRk=totPeers.filter(x=>x.tot.foc>rep.tot.foc).length+1;
+    const medRk=totPeers.filter(x=>x.tot.med<rep.tot.med).length+1;// lower is better
+    const totMinRk=totPeers.filter(x=>x.tot.tot>rep.tot.tot).length+1;
+    h+=`<div class="pv-section-title">Time on Tasks</div><div class="tot-grid">`;
+    h+=`<div class="tot-card"><div class="tot-label">Med Min</div><div class="tot-val">${rep.tot.med}</div><div style="font-size:9px;color:var(--text-2)">#${medRk}/${tp}</div></div>`;
+    h+=`<div class="tot-card"><div class="tot-label">Focus%</div><div class="tot-val" style="color:${rep.tot.foc>=15?'var(--green)':rep.tot.foc>=8?'var(--amber)':'var(--coral)'}">${rep.tot.foc}%</div><div style="font-size:9px;color:var(--text-2)">#${focRk}/${tp}</div></div>`;
+    h+=`<div class="tot-card"><div class="tot-label">Long%</div><div class="tot-val">${rep.tot.lng}%</div></div>`;
+    h+=`<div class="tot-card"><div class="tot-label">Rapid%</div><div class="tot-val">${rep.tot.rap}%</div></div>`;
+    h+=`<div class="tot-card"><div class="tot-label">Solo%</div><div class="tot-val">${rep.tot.sol}%</div></div>`;
+    h+=`<div class="tot-card"><div class="tot-label">Total Min</div><div class="tot-val">${rep.tot.tot.toLocaleString()}</div><div style="font-size:9px;color:var(--text-2)">#${totMinRk}/${tp}</div></div>`;
+    h+=`</div>`}
+  h+=`</div></div>`;
+  document.getElementById('pvContent').innerHTML=h;
+}
+
+// ═══ CLIENT VIEW ═══
+function renderClient(){
+  // Build month-filtered firm data from all fails in embedded data
+  const firms=D.firms||{};
+  const isYTD=curMonth==='YTD';
+  
+  // Filter firm details by selected month
+  const filteredFirms={};
+  Object.entries(firms).forEach(([firm,fd])=>{
+    const details=(fd.d||[]).filter(f=>{
+      if(isYTD)return true;
+      // Match month from the fail's month field or date field
+      if(f.m===curMonth)return true;
+      // Also check the date string for month matching
+      const dateStr=f.date||'';
+      const monthMap={Jan:'01',Feb:'02',Mar:'03',Apr:'04'};
+      if(dateStr.includes('2026-'+monthMap[curMonth]))return true;
+      return false;
+    });
+    if(details.length>0){
+      filteredFirms[firm]={c:details.length,d:details,p:[...new Set(details.map(d=>d.person))]};
+    }
+  });
+  
+  const sorted=Object.entries(filteredFirms).sort((a,b)=>b[1].c-a[1].c);
+  const label=isYTD?'All Months (YTD)':curMonth+' 2026';
+  
+  let h=`<div class="section-hdr"><div><div class="section-title">⚖ Client View</div><div class="section-sub">Fails by Law Firm · ${label} · ${sorted.length} firms with fails</div></div></div>`;
+  h+=`<div class="disc-box">Law firm data was not captured from the start on all Monday boards. Some entries may be incomplete or attributed to "Unknown."</div>`;
+  h+=`<div class="client-filter-row"><select class="client-select" id="clientSel" onchange="filterClient()"><option value="">All Law Firms with Fails (${sorted.length})</option>${sorted.map(([f,d])=>`<option value="${f}">${f} (${d.c})</option>`).join('')}</select></div><div id="clientCards"></div>`;
+  document.getElementById('tab-client').innerHTML=h;
+  filterClient();
+}
+function filterClient(){
+  const sel=document.getElementById('clientSel').value;const firms=D.firms||{};
+  const isYTD=curMonth==='YTD';const monthMap={Jan:'01',Feb:'02',Mar:'03',Apr:'04'};
+  
+  // Re-filter by month
+  const filteredFirms={};
+  Object.entries(firms).forEach(([firm,fd])=>{
+    const details=(fd.d||[]).filter(f=>{
+      if(isYTD)return true;
+      if(f.m===curMonth)return true;
+      const ds=f.date||'';if(ds.includes('2026-'+monthMap[curMonth]))return true;
+      return false;
+    });
+    if(details.length>0)filteredFirms[firm]={c:details.length,d:details,p:[...new Set(details.map(d=>d.person))]};
+  });
+  
+  const allSorted=Object.entries(filteredFirms).sort((a,b)=>b[1].c-a[1].c);
+  const show=sel?[[sel,filteredFirms[sel]]]:allSorted.slice(0,30);
+  let h='';
+  show.forEach(([firm,fd])=>{if(!fd)return;
+    h+=`<div class="client-card"><div class="client-card-hdr"><div class="client-card-name">${firm}</div><div class="client-card-badges"><span class="client-fail-badge">${fd.c} fail${fd.c>1?'s':''}</span><span style="font-size:10px;color:#8EA3C3">${fd.p.slice(0,3).join(', ')}${fd.p.length>3?' +'+( fd.p.length-3):''}</span></div></div>`;
+    h+=`<div class="client-body"><table class="client-fails-table"><thead><tr><th>Date</th><th>Rep</th><th>Team</th><th>Category</th><th>Reason / Notes</th><th>Job</th></tr></thead><tbody>`;
+    (fd.d||[]).forEach(f=>{
+      // Build date display from the fail data
+      const rawDate=f.date||f.m||'';
+      const dateDisplay=rawDate.includes('2026')?rawDate.split('T')[0].replace('2026-',''):f.m||'';
+      h+=`<tr><td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:11px">${dateDisplay}</td><td style="font-weight:600">${f.person||''}</td><td style="font-size:11px">${(f.team||'').split('(')[0].trim()}</td><td>${catTag(f.c||f.b)}</td><td style="font-size:12px;max-width:300px;color:var(--text-2)">${f.reason&&f.reason!=='nan'?'<em>'+f.reason+'</em><br>':''}${f.note&&f.note!=='nan'?f.note:''}</td><td>${f.j&&f.j.startsWith('http')?`<a class="fail-link" href="${f.j}" target="_blank">View</a>`:''}</td></tr>`});
+    h+=`</tbody></table></div></div>`;
+  });
+  if(!show.length)h+=`<div style="text-align:center;padding:40px;color:var(--text-2)">No fails recorded for ${curMonth==='YTD'?'any month':curMonth}.</div>`;
+  document.getElementById('clientCards').innerHTML=h;
+}
+
+// ═══ TRENDS ═══
+function renderTrends(){
+  const md=getM();const ts=Object.entries(md.teams).sort((a,b)=>b[1].avg_ops-a[1].avg_ops);
+  let h=`<div class="section-hdr"><div><div class="section-title">Trends</div><div class="section-sub">OPS trajectory across months</div></div></div>`;
+  // OPS chart
+  const vals=ML.map(m=>D.months[m]?D.months[m].org.avg_ops:null);
+  h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:var(--shadow)"><svg viewBox="0 0 400 80" style="width:100%;height:80px"><line x1="40" y1="70" x2="380" y2="70" stroke="var(--border)" stroke-width="0.5"/>`;
+  const vO=vals.filter(v=>v!=null);if(vO.length>1){const mn=Math.min(...vO)-2,mx=Math.max(...vO)+2,rng=mx-mn;const pts=[];vals.forEach((v,i)=>{if(v!=null){const x=60+i*100,y=65-((v-mn)/rng)*55;pts.push(`${x},${Math.round(y)}`);h+=`<circle cx="${x}" cy="${Math.round(y)}" r="4" fill="var(--green)"/><text x="${x}" y="${Math.round(y)-8}" fill="var(--green)" font-size="9" text-anchor="middle" font-weight="700" font-family="DM Mono">${v}</text><text x="${x}" y="78" fill="var(--text-2)" font-size="8" text-anchor="middle" font-family="DM Sans">${ML[i]}</text>`}});h+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--green)" stroke-width="2"/>`}
+  h+=`</svg></div>`;
+  // Movers
+  const all=[];Object.values(md.roles).forEach(rps=>rps.forEach(r=>all.push(r)));
+  const top5=all.filter(r=>r.o).sort((a,b)=>b.o-a.o).slice(0,5);const bot5=all.filter(r=>r.o).sort((a,b)=>a.o-b.o).slice(0,5);
+  h+=`<div class="insights-grid"><div class="insight-card"><div class="insight-card-hdr" style="background:var(--grn-soft)"><span class="ic-icon">&#127942;</span><div><div class="ic-title" style="color:var(--green)">Top Performers</div></div></div><div class="insight-body">${top5.map(r=>`<div class="insight-item"><div class="insight-dot" style="background:var(--green)"></div><div class="insight-text"><strong>${r.n}</strong> — <span class="good">${r.o}</span> OPS · ${r.t}</div></div>`).join('')}</div></div>`;
+  h+=`<div class="insight-card"><div class="insight-card-hdr" style="background:var(--red-soft)"><span class="ic-icon">&#128269;</span><div><div class="ic-title" style="color:var(--coral)">Areas for Growth</div></div></div><div class="insight-body">${bot5.map(r=>`<div class="insight-item"><div class="insight-dot" style="background:var(--coral)"></div><div class="insight-text"><strong>${r.n}</strong> — <span class="flag">${r.o}</span> OPS · ${r.t}</div></div>`).join('')}</div></div></div>`;
+  // Team trajectories
+  h+=`<div class="team-grid">`;
+  ts.forEach(([tn])=>{const s=tn.split('(')[0].trim();const tO=ML.map(m=>{const mt=D.months[m];if(!mt)return null;const t=Object.entries(mt.teams).find(([k])=>k===tn);return t?t[1].avg_ops:null});h+=`<div class="team-card"><div class="team-card-hdr"><div class="team-card-name">${s}</div></div><div class="team-card-body">${ML.map((m,i)=>tO[i]!=null?`<div class="team-metric"><span class="tm-label">${m}</span><span class="tm-val"><span class="score-chip ${cc(tO[i])}" style="font-size:11px">${tO[i]}</span></span></div>`:'').join('')}</div></div>`});
+  h+=`</div>`;
+  document.getElementById('tab-trends').innerHTML=h;
+}
+
+// ═══ GUIDE ═══
+function renderGuide(){
+  let h=`<div class="section-hdr"><div><div class="section-title">Guide</div><div class="section-sub">How to read this dashboard</div></div></div>`;
+  h+=`<div style="background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:20px;font-size:14px;color:var(--text-2);line-height:1.7;box-shadow:var(--shadow)">This dashboard combines three data pillars: <strong style="color:var(--text)">Adherence</strong>, <strong style="color:var(--text)">Quality</strong> and <strong style="color:var(--text)">Time on Tasks</strong>. The Overall Performance Score (OPS) = W.Adh x 40% + Quality Score x 60%.</div>`;
+  // Badges & Archetypes
+  h+=`<div style="background:var(--surface);border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px">`;
+  h+=`<div style="padding:14px 18px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px">Badges & Archetypes</div>`;
+  h+=`<div style="padding:16px 18px">`;
+  h+=`<div style="font-size:13px;font-weight:700;margin-bottom:8px">Badges</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px;margin-bottom:16px">`;
+  const badgeDefs=[
+    {tag:'Elite',cls:'badge-elite',cat:'Quality',desc:'OPS 90 or above'},
+    {tag:'Clean Sheet',cls:'badge-clean',cat:'Quality',desc:'Zero quality fails this period'},
+    {tag:'Ironclad',cls:'badge-ironclad',cat:'Quality',desc:'Zero fails 2+ consecutive months'},
+    {tag:'Glass Cannon',cls:'badge-glass',cat:'Quality',desc:'Top 25% adherence but 3+ fails'},
+    {tag:'Audit Survivor',cls:'badge-survivor',cat:'Quality',desc:'Top quartile volume, zero fails'},
+    {tag:'Client Favorite',cls:'badge-client',cat:'Quality',desc:'Zero Client Feedback board fails'},
+    {tag:'Quick Draw',cls:'badge-quick',cat:'Speed',desc:'Bottom 25% task time + quality 90+'},
+    {tag:'Deep Diver',cls:'badge-deep',cat:'Speed',desc:'Top quartile focus %'},
+    {tag:'Multitasker',cls:'badge-multi',cat:'Speed',desc:'Parallel work patterns + OPS 85+'},
+    {tag:'Marathon',cls:'badge-marathon',cat:'Speed',desc:'Top quartile total minutes'},
+    {tag:'Volume',cls:'badge-vol',cat:'Volume',desc:'Top quartile task count'},
+    {tag:'Rising',cls:'badge-rising',cat:'Trend',desc:'OPS improved 5+ vs prior month'},
+    {tag:'Streak',cls:'badge-streak',cat:'Trend',desc:'3+ consecutive months at OPS 90+'},
+    {tag:'Bounce Back',cls:'badge-bounce',cat:'Trend',desc:'3+ fails last month, zero this month'},
+    {tag:'Fading',cls:'badge-fading',cat:'Trend',desc:'OPS dropped 5+ vs prior month'},
+    {tag:'Red Zone',cls:'badge-red',cat:'Risk',desc:'OPS below 75 or 5+ fails'},
+    {tag:'Rework Flag',cls:'badge-rework',cat:'Risk',desc:'Rework rate above 10%'},
+    {tag:'Repeat Offender',cls:'badge-repeat',cat:'Risk',desc:'Same firm in 3+ of their fails'}
+  ];
+  badgeDefs.forEach(bd=>{h+=`<div style="display:flex;align-items:center;gap:6px;padding:4px 0"><span class="rep-badge ${bd.cls}">${bd.tag}</span><span style="font-size:11px;color:var(--text-2)">${bd.desc}</span></div>`});
+  h+=`</div>`;
+  h+=`<div style="font-size:13px;font-weight:700;margin-bottom:8px">Archetypes</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px">`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--green)">Ace</div><div style="font-size:11px;color:var(--text-2)">OPS 95+, zero fails, top quartile volume. The gold standard.</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--teal)">Steady Hand</div><div style="font-size:11px;color:var(--text-2)">OPS 85-94, zero fails. Reliable, consistent performer.</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--amber)">Workhorse</div><div style="font-size:11px;color:var(--text-2)">Top quartile volume but OPS below 90. High output, room to refine.</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--purple)">Precision</div><div style="font-size:11px;color:var(--text-2)">OPS 90+, zero fails, but below-median volume. Quality over quantity.</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--coral)">Under Review</div><div style="font-size:11px;color:var(--text-2)">3+ fails or OPS below 75. Needs targeted coaching plan.</div></div>`;
+  h+=`<div style="background:var(--off);border-radius:8px;padding:10px"><div style="font-weight:700;font-size:12px;color:var(--indigo)">Rising</div><div style="font-size:11px;color:var(--text-2)">OPS improved 5+ points from prior month. Momentum building.</div></div>`;
+  h+=`</div></div></div>`;
+  const secs=[
+    {t:'OPS Calculation',b:'<p><strong>Step 1:</strong> Each task type gets a Performance Score (PS, 0-100) from adherence rate.</p><p><strong>Step 2:</strong> W.Adh = weighted sum of PS values.</p><p><strong>Step 3:</strong> OPS = W.Adh x 40% + Quality Score x 60%.</p><p><strong>Weights:</strong> Service/ESC/Off App: Chats 30%, 1st Att 25%, Job SLA 20%, Bad Addr 10%, Ad Hoc 8%, Att Limit 5%, Nudge 2%. QA: Aff Prep 75%, Aff Chg 20%, Ad Hoc 5%. Dispatch: Assign Server 80%, Ad Hoc 20%.</p>'},
+    {t:'Quality Scoring (k=75)',b:'<p><strong>W.Quality</strong> = Fails / Tasks. <strong>Anchor</strong> = 3% + (75/tasks). <strong>QS</strong> = 100 - (W.Quality/anchor) x 100.</p><p>Zero fails = QS 100. No-audit reps receive role peer average.</p><p>See <strong>Sources</strong> tab for column-level detail on all 4 Monday boards.</p>'},
+    {t:'Time on Tasks',b:'<p><strong>Focus%</strong> = Focused Min / Task Min. <strong>Long%</strong> = tasks with pace=long. <strong>Solo%</strong> = tasks with overlap=solo.</p><p>12 people currently have ToT data across Jan-Apr. See <strong>Sources</strong> tab for column mapping.</p>'},
+    {t:'Rework Rate',b:'<p>"Reworked Rate (Not Server)" from the Rework Rate sheet. See <strong>Sources</strong> tab for column mapping.</p>'},
+    {t:'Glossary',b:'<p><strong>OPS:</strong> Overall Performance Score (W.Adh x 40% + QS x 60%).</p><p><strong>W.Adh:</strong> Weighted Adherence (weighted sum of per-task PS).</p><p><strong>PS:</strong> Performance Score per task (adherence x 100).</p><p><strong>QS:</strong> Quality Score (0-100, volume-adjusted anchor).</p><p><strong>W.Quality:</strong> Fails/Tasks (raw error rate).</p><p><strong>Rework Rate:</strong> From Omni, not-server rework.</p><p><strong>Focus%:</strong> Focused Min / Task Min.</p><p><strong>Median Min:</strong> Central tendency of task duration.</p><p><strong>Long/Rapid%:</strong> % of tasks in pace buckets.</p><p><strong>Solo/Mixed/Batched:</strong> Overlap labels.</p>'},
+    {t:'Known Limitations',b:'<p>ToT data covers 12 of ~70 reps. Law firm data incomplete on some boards. Quality anchor (k=75) reviewed each cycle. Rework is separate from quality audits.</p>'}
+  ];
+  secs.forEach((s,i)=>{h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow)"><div style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:8px" onclick="this.parentElement.classList.toggle('open')"><span style="font-size:11px;font-weight:700;color:var(--gold);padding:2px 8px;border-radius:6px;background:rgba(201,144,12,.12)">${i+1}</span><span style="font-weight:700;flex:1">${s.t}</span><span style="font-size:10px;color:var(--text-2)">&#9654;</span></div><div style="padding:0 16px 14px;font-size:13px;line-height:1.6;color:var(--text-2);display:none">${s.b}</div></div>`});
+  // Make first 2 open
+  h+=`<script>document.querySelectorAll('#tab-guide > div:nth-child(n+3):nth-child(-n+4)').forEach(d=>{d.classList.add('open');d.querySelector('div:last-child').style.display='block'})<\/script>`;
+  document.getElementById('tab-guide').innerHTML=h;
+  // Fix guide toggle
+  document.querySelectorAll('#tab-guide [onclick]').forEach(el=>{el.addEventListener('click',function(){const panel=this.nextElementSibling;panel.style.display=panel.style.display==='none'?'block':'none'})});
+}
+
+init();
+</script></body></html>
