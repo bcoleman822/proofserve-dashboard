@@ -66,6 +66,57 @@ def cn(v):
     if s.lower() in ('none', 'server', 'client', 'nan', ''): return None
     return s
 
+
+# ═══════════════════════════════════════════
+# NAME MATCHING
+# ═══════════════════════════════════════════
+
+def build_name_map(roster_names, sheet_names):
+    """Build a mapping from sheet names to roster names.
+    Tries exact match first, then prefix match (first 10 chars),
+    then first-word + first-letter-of-last match for truncated names."""
+    name_map = {}  # sheet_name -> roster_name
+    
+    for sn in sheet_names:
+        sn_clean = sn.strip()
+        # 1. Exact match
+        if sn_clean in roster_names:
+            name_map[sn_clean] = sn_clean
+            continue
+        
+        # 2. Prefix match (first 10 chars, handles truncation)
+        prefix = sn_clean[:10].lower()
+        matches = [rn for rn in roster_names if rn.lower().startswith(prefix)]
+        if len(matches) == 1:
+            name_map[sn_clean] = matches[0]
+            continue
+        
+        # 3. First name + first char of last name
+        parts = sn_clean.split()
+        if len(parts) >= 2:
+            first = parts[0].lower()
+            last_init = parts[1][0].lower() if parts[1] else ''
+            matches = [rn for rn in roster_names 
+                       if rn.lower().startswith(first) and 
+                       len(rn.split()) >= 2 and 
+                       rn.split()[1][0].lower() == last_init]
+            if len(matches) == 1:
+                name_map[sn_clean] = matches[0]
+                continue
+        
+        # 4. No match found, keep original (won't match roster, gets filtered)
+        name_map[sn_clean] = sn_clean
+    
+    # Log matches that used fuzzy matching
+    fuzzy = {k: v for k, v in name_map.items() if k != v}
+    if fuzzy:
+        print(f"  Fuzzy name matches ({len(fuzzy)}):")
+        for k, v in sorted(fuzzy.items()):
+            print(f"    '{k}' -> '{v}'")
+    
+    return name_map
+
+
 def quality_score(wq, total_tasks):
     if total_tasks == 0: return None
     anchor = 0.03 + (75.0 / total_tasks)
@@ -157,12 +208,12 @@ def get_reader(local_path=None):
     return SheetReader('api', spreadsheet)
 
 
-def extract_roster(sr):
+def parse_roster_tab(data):
+    """Parse a single roster tab (Roster1, Roster_Jan, etc.) into a dict"""
     roster = {}
-    data = sr.get_sheet('Roster1')
-    for r in range(2, len(data)):  # 0-indexed, skip header rows
+    for r in range(2, len(data)):
         row = data[r]
-        for base in [0, 3, 6, 9, 12]:  # 0-indexed column groups
+        for base in [0, 3, 6, 9, 12]:
             if base + 2 >= len(row): continue
             t = row[base] if base < len(row) else None
             n = row[base + 1] if base + 1 < len(row) else None
@@ -171,8 +222,45 @@ def extract_roster(sr):
                 nm = str(n).strip()
                 role = ROLE_NORM.get(str(rl).strip(), str(rl).strip())
                 roster[nm] = {'team': str(t).strip(), 'role': role}
-    print(f"Roster: {len(roster)} reps")
     return roster
+
+
+def extract_rosters(sr):
+    """Extract per-month rosters with fallback to Roster1.
+    Returns: {month_label: {name: {team, role}}, ...} plus 'default' key.
+    Checks for tabs named Roster_Jan, Roster_Feb, etc.
+    Falls back to Roster1 for any month without a snapshot."""
+    
+    # Always load the default roster
+    default_data = sr.get_sheet('Roster1')
+    default_roster = parse_roster_tab(default_data)
+    print(f"Default Roster (Roster1): {len(default_roster)} reps")
+    
+    rosters = {'default': default_roster}
+    
+    for month in MONTHS:
+        tab_name = f'Roster_{month}'
+        try:
+            data = sr.get_sheet(tab_name)
+            if data and len(data) > 2:
+                month_roster = parse_roster_tab(data)
+                if month_roster:
+                    rosters[month] = month_roster
+                    print(f"  {tab_name}: {len(month_roster)} reps (snapshot found)")
+                else:
+                    print(f"  {tab_name}: empty, using default")
+            else:
+                print(f"  {tab_name}: not found or empty, using default")
+        except Exception:
+            print(f"  {tab_name}: not found, using default")
+    
+    return rosters
+
+
+def get_roster_for_month(rosters, month):
+    """Get the appropriate roster for a given month.
+    Uses month-specific snapshot if available, otherwise falls back to default."""
+    return rosters.get(month, rosters['default'])
 
 
 def detect_layout(data):
@@ -293,6 +381,10 @@ def extract_fails(sr, roster):
                           'f': cn(row[6] if len(row) > 6 else None),  # Col G
                           'reason': str(row[14] if len(row) > 14 else '')[:100]})  # Col O
     
+    # Fuzzy match fail person names to roster names
+    fail_name_map = build_name_map(roster_names, set(f['p'] for f in all_fails))
+    for f in all_fails:
+        f['p'] = fail_name_map.get(f['p'], f['p'])
     all_fails = [f for f in all_fails if f['p'] in roster_names]
     print(f"Total fails (roster-filtered): {len(all_fails)}")
     return all_fails
@@ -364,7 +456,7 @@ def extract_tot(sr):
 # BUILD MONTHLY DATA
 # ═══════════════════════════════════════════
 
-def build_monthly_data(sr, roster, all_fails, rework, tot_data):
+def build_monthly_data(sr, rosters, all_fails, rework, tot_data):
     roles_tasks = {}
     roles_adh = {}
     for role, ts, ads in [
@@ -383,17 +475,30 @@ def build_monthly_data(sr, roster, all_fails, rework, tot_data):
     fail_map = defaultdict(lambda: defaultdict(list))
     for f in all_fails: fail_map[f['p']][f['m']].append(f)
     
+    # Build name maps for each role (task sheet names -> roster names)
+    all_roster_names = set()
+    for month_roster in rosters.values():
+        all_roster_names.update(month_roster.keys())
+    
+    role_name_maps = {}
+    for role in ['Service', 'ESC Lead', 'QA', 'Dispatch', 'Off App']:
+        all_sheet_names = set(list(roles_tasks[role].keys()) + list(roles_adh[role].keys()))
+        role_name_maps[role] = build_name_map(all_roster_names, all_sheet_names)
+    
     output = {'months': {}}
     for mi in MONTHS:
+        roster = get_roster_for_month(rosters, mi)
         md = {'roles': {}}
         for role in ['Service', 'ESC Lead', 'QA', 'Dispatch', 'Off App']:
             wts = WEIGHTS[role]; reps = []
             t_data = roles_tasks[role]; a_data = roles_adh[role]
-            for name in set(list(t_data.keys()) + list(a_data.keys())):
+            nmap = role_name_maps[role]
+            for sheet_name in set(list(t_data.keys()) + list(a_data.keys())):
+                name = nmap.get(sheet_name, sheet_name)  # Map to roster name
                 ri = roster.get(name, {})
                 if ri.get('role') != role: continue
-                tasks_m = t_data.get(name, {}).get(mi, {})
-                adh_m = a_data.get(name, {}).get(mi, {})
+                tasks_m = t_data.get(sheet_name, {}).get(mi, {})  # Use sheet_name for data lookup
+                adh_m = a_data.get(sheet_name, {}).get(mi, {})    # Use sheet_name for data lookup
                 total_tasks = sum(v or 0 for v in tasks_m.values() if isinstance(v, (int, float)))
                 if total_tasks == 0: continue
                 wtotal = 0; wsum = 0; ps_dict = {}; tk_dict = {}
@@ -472,7 +577,7 @@ def build_monthly_data(sr, roster, all_fails, rework, tot_data):
         firm_data[firm]['people'].add(f['p'])
         if len(firm_data[firm]['details']) < 25:
             firm_data[firm]['details'].append({'b': f['b'], 'c': f['c'], 'j': f['j'], 'note': f['note'],
-                'f': firm, 'person': f['p'], 'team': roster.get(f['p'], {}).get('team', ''),
+                'f': firm, 'person': f['p'], 'team': rosters['default'].get(f['p'], {}).get('team', ''),
                 'reason': f.get('reason', ''), 'm': f['m']})
     output['firms'] = {k: {'c': v['count'], 'm': dict(v['months']), 'p': list(v['people']), 'd': v['details']}
         for k, v in sorted(firm_data.items(), key=lambda x: x[1]['count'], reverse=True)[:60]}
@@ -492,13 +597,14 @@ def main():
     sr = get_reader(local_path)
     
     print("\n=== Extracting data ===")
-    roster = extract_roster(sr)
+    rosters = extract_rosters(sr)
+    roster = rosters['default']  # For fail filtering, use default
     all_fails = extract_fails(sr, roster)
     rework = extract_rework(sr)
     tot_data = extract_tot(sr)
     
     print("\n=== Building monthly data ===")
-    data = build_monthly_data(sr, roster, all_fails, rework, tot_data)
+    data = build_monthly_data(sr, rosters, all_fails, rework, tot_data)
     
     data_json = json.dumps(data, separators=(',', ':'), default=str)
     print(f"\nData JSON: {len(data_json):,} chars")
